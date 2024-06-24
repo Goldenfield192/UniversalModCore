@@ -2,7 +2,7 @@ buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
     }
-	dependencies {
+    dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
     }
 }
@@ -41,7 +41,7 @@ archivesBaseName = "UniversalModCore"
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
 minecraft {
-    // The mappings can be changed at any time, and must be in the following format.
+    // The mappings can be changed at any time, and must be in the following forat.
     // snapshot_YYYYMMDD   Snapshot are built nightly.
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
@@ -106,13 +106,20 @@ minecraft {
     }
 }
 
+repositories {
+    maven {
+        url "https://cursemaven.com"
+    }
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.14.4-28.2.26'
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
-      
+
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
@@ -136,13 +143,13 @@ dependencies {
 jar {
     manifest {
         attributes([
-            "Specification-Title": "universalmodcore",
-            "Specification-Vendor": "",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": project.name,
-            "Implementation-Version": umcVersion,
-            "Implementation-Vendor" :"",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                "Specification-Title": "universalmodcore",
+                "Specification-Vendor": "",
+                "Specification-Version": "1", // We are version 1 of ourselves
+                "Implementation-Title": project.name,
+                "Implementation-Version": umcVersion,
+                "Implementation-Vendor" :"",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
     configurations.shade.each { dep ->
