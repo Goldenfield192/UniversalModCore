@@ -1,23 +1,28 @@
 package cam72cam.mod.gui.container;
 
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.gui.screen.Button;
+import cam72cam.mod.gui.screen.TextField;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.renderer.texture.AtlasTexture;
-import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import org.lwjgl.opengl.GL11;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
@@ -39,6 +44,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     private final Supplier<Boolean> valid;
     private int centerX;
     private int centerY;
+    private final Map<Widget, Button> buttonMap;
 
     private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
 
@@ -48,6 +54,18 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.ySize = server.ySize;
         this.valid = () -> true; // TODO
+        buttonMap = new HashMap<>();
+    }
+
+    @Override
+    protected void init() {
+        buttonMap.clear();
+        this.addButton(new Button(this,100,100,"100") {
+            @Override
+            public void onClick(Player.Hand hand) {
+                System.out.println("success!");
+            }
+        });
     }
 
     @Override
@@ -204,6 +222,30 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     }
 
     @Override
+    public void addButton(Button btn) {
+        super.addButton(btn.internal());
+        this.buttonMap.put(btn.internal(), btn);
+        if (btn instanceof TextField) {
+            this.setFocused(btn.internal());
+        }
+    }
+
+    @Override
+    public void addTextField(TextField textField) {
+        addButton(textField);
+    }
+
+    @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
+    }
+
+    @Override
     public void drawSlotOverlay(ItemStack stack, int x, int y) {
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
@@ -255,5 +297,8 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     {
         super.render(mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
-    }
+        for (Button btn : buttonMap.values()) {
+            btn.onUpdate();
+        }
+        }
 }

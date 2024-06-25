@@ -107,9 +107,6 @@ minecraft {
 }
 
 repositories {
-    maven {
-        url "https://cursemaven.com"
-    }
     maven { url = "https://teamopenindustry.cc/maven" }
 }
 
@@ -135,6 +132,8 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    implementation fg.deobf('cam72cam.immersiverailroading:ImmersiveRailroading:1.14.4-forge-1.10.0')
+    implementation fg.deobf('trackapi:TrackAPI:1.14.4-forge-1.2')
     testImplementation ('junit:junit:4.13')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'

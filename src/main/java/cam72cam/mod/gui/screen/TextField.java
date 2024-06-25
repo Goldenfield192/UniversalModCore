@@ -1,6 +1,7 @@
 package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.container.IContainerBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 
@@ -16,7 +17,14 @@ public class TextField extends Button {
         );
     }
 
-    TextFieldWidget internal() {
+    public TextField(IContainerBuilder builder, int x, int y, int width, int height) {
+        super(
+                builder,
+                new TextFieldWidget(Minecraft.getInstance().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, "")
+        );
+    }
+
+    public TextFieldWidget internal() {
         return (TextFieldWidget) button;
     }
 

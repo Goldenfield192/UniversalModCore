@@ -83,12 +83,12 @@ public class World {
     private static Map<Integer, World> getWorldMap(net.minecraft.world.World world) {
         return world.isRemote ? clientWorlds : serverWorlds;
     }
-    /** Helper function to get a world in it's respective map */
+    /** Helper function to get a world in its respective map */
     private static World getWorld(net.minecraft.world.World world){
         return getWorldMap(world).get(world.getDimension().getType().getId());
     }
 
-    /** Load world hander, sets up maps and internal handlers */
+    /** Load world handler, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
@@ -157,7 +157,7 @@ public class World {
         }
     }
 
-    /** Turn a MC world into a UMC world */
+    /** Turn a Vanilla world into a UMC world */
     public static World get(net.minecraft.world.World world) {
         if (world == null) {
             return null;
@@ -450,7 +450,7 @@ public class World {
         return internal.isRaining();
     }
 
-    /** If it is is raining */
+    /** If it is raining */
     public boolean isRaining(Vec3i position) {
         return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.RainType.RAIN;
     }
@@ -475,6 +475,13 @@ public class World {
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
         internal.addEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal));
+    }
+
+    /** Drop a stack on the ground at pos with velocity*/
+    public void dropItemWithVelocity(ItemStack stack, Vec3d pos, Vec3d velocity) {
+        ItemEntity item = new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal);
+        item.setVelocity(velocity.x, velocity.y, velocity.z);
+        internal.addEntity(item);
     }
 
     /** Check if the block is currently in a loaded chunk */
@@ -503,7 +510,7 @@ public class World {
         this.breakBlock(pos, true);
     }
 
-    /** Break block with sound effecnts, particles and optional drops */
+    /** Break block with sound effects, particles and optional drops */
     public void breakBlock(Vec3i pos, boolean drop) {
         internal.destroyBlock(pos.internal(), drop);
     }

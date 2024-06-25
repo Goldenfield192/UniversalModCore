@@ -1,6 +1,8 @@
 package cam72cam.mod.gui.container;
 
 import cam72cam.mod.fluid.Fluid;
+import cam72cam.mod.gui.screen.Button;
+import cam72cam.mod.gui.screen.TextField;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
 import net.minecraft.entity.player.PlayerEntity;
@@ -124,6 +126,26 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
     @Override
     public void drawCenteredString(String quantityStr, int x, int y) {
 
+    }
+
+    @Override
+    public void addButton(Button btn) {
+
+    }
+
+    @Override
+    public void addTextField(TextField textField) {
+
+    }
+
+    @Override
+    public int getWidth() {
+        return 100;
+    }
+
+    @Override
+    public int getHeight() {
+        return 100;
     }
 
     @Override

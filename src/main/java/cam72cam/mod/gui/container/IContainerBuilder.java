@@ -1,6 +1,8 @@
 package cam72cam.mod.gui.container;
 
 import cam72cam.mod.fluid.Fluid;
+import cam72cam.mod.gui.screen.Button;
+import cam72cam.mod.gui.screen.TextField;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
 
@@ -44,4 +46,16 @@ public interface IContainerBuilder {
 
     /** Draw a centered and shadowed string at coords */
     void drawCenteredString(String quantityStr, int x, int y);
+
+    /** Add a button to this screen */
+    void addButton(Button btn);
+
+    /** Add a text field to this GUI */
+    void addTextField(TextField textField);
+
+    /** Current width */
+    int getWidth();
+
+    /** Current height */
+    int getHeight();
 }

@@ -1,5 +1,6 @@
 package cam72cam.mod.gui.screen;
 
+import cam72cam.mod.gui.container.IContainerBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
@@ -54,14 +55,31 @@ public abstract class Button {
         this(builder, x, y, 200, 20, text);
     }
 
+    /** Default width/height */
+    public Button(IContainerBuilder builder, int x, int y, String text) {
+        this(builder, x, y, 200, 20, text);
+    }
+
     /** Custom width/height */
     public Button(IScreenBuilder builder, int x, int y, int width, int height, String text) {
         this(builder, new InternalButton(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text));
         ((InternalButton)this.button).clicker = this::onClickInternal;
     }
 
+    /** Custom width/height */
+    public Button(IContainerBuilder builder, int x, int y, int width, int height, String text) {
+        this(builder, new InternalButton(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text));
+        ((InternalButton)this.button).clicker = this::onClickInternal;
+    }
+
+
     /** Internal ctr */
     Button(IScreenBuilder builder, Widget button) {
+        this.button = button;
+        builder.addButton(this);
+    }
+
+    Button(IContainerBuilder builder, Widget button) {
         this.button = button;
         builder.addButton(this);
     }
@@ -80,7 +98,7 @@ public abstract class Button {
         onClick(hand);
     }
 
-    Widget internal() {
+    public Widget internal() {
         return button;
     }
 
