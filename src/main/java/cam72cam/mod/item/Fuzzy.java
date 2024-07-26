@@ -25,7 +25,7 @@ public class Fuzzy {
             .add(Blocks.JUNGLE_PLANKS)
             .add(Blocks.OAK_PLANKS)
             .add(Blocks.SPRUCE_PLANKS);
-    public static final Fuzzy REDSTONE_DUST = new Fuzzy(Tags.Items.DUSTS_REDSTONE, "dustRedstone");
+    public static final Fuzzy REDSTONE_DUST = new Fuzzy(Tags.Items.DUSTS_REDSTONE, "dustRedstone").add(Items.REDSTONE);
     public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.SNOW);
     public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW_BLOCK);
     public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
