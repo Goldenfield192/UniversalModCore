@@ -113,6 +113,7 @@ minecraft {
 
 repositories {
     mavenCentral()
+    maven { url = "https://teamopenindustry.cc/maven" }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -143,8 +144,10 @@ dependencies {
     shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
+    implementation fg.deobf('cam72cam.immersiverailroading:ImmersiveRailroading:1.20.1-forge-1.10.0-bef835d')
+    implementation fg.deobf('trackapi:TrackAPI:1.20.1-forge-1.2')
 
-    shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
+    minecraftLibrary('org.lz4:lz4-java:1.8.0')
 }
 
 jar {

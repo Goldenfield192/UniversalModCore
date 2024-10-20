@@ -139,10 +139,11 @@ public class BlockRender {
         ClientEvents.MODEL_BAKE.subscribe(event -> {
             event.getModels().put(new ModelResourceLocation(block.id.internal, ""), new BakedModel() {
                 @Override
-                public @NotNull List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData properties, @org.jetbrains.annotations.Nullable RenderType renderType) {
+                public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData properties, @Nullable RenderType renderType) {
                     if (block instanceof BlockTypeEntity) {
                         TileEntity data = properties.get(TileEntity.TE_PROPERTY);
                         if (data == null || !cls.isInstance(data.instance())) {
+                            //TODO data.instance() become null after reload
                             System.out.println(data);
                             return EMPTY;
                         }
