@@ -4,8 +4,10 @@ import cam72cam.mod.item.ItemStack;
 
 import java.util.UUID;
 
-/** Wrapper around ItemEntity */
-public class ItemEntity extends Entity{
+/**
+ * Wrapper around ItemEntity
+ */
+public class ItemEntity extends Entity {
     public net.minecraft.entity.item.ItemEntity internal;
 
     public ItemEntity(net.minecraft.entity.item.ItemEntity entity) {
@@ -13,17 +15,18 @@ public class ItemEntity extends Entity{
         this.internal = entity;
     }
 
-    public ItemStack getContent(){
+    public ItemStack getContent() {
         return new ItemStack(internal.getItem());
     }
 
-    public UUID getOwner(){
+    public UUID getOwner() {
         return internal.getOwnerId();
     }
 
-    public UUID getThrower(){
+    public UUID getThrower() {
         return internal.getThrowerId();
     }
+
     public void setDefaultPickupDelay() {
         internal.setDefaultPickupDelay();
     }
@@ -40,7 +43,7 @@ public class ItemEntity extends Entity{
         internal.setPickupDelay(ticks);
     }
 
-    public void setNoDespawn(){
+    public void setNoDespawn() {
         internal.setNoDespawn();
     }
 }
