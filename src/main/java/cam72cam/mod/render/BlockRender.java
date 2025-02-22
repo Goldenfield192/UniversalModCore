@@ -140,11 +140,11 @@ public class BlockRender {
                 public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand, IModelData properties) {
                     if (block instanceof BlockTypeEntity) {
                         TileEntity data = properties.getData(TileEntity.TE_PROPERTY);
-                        if (data == null || !cls.isInstance(data.instance())) {
+                        if (data == null || !cls.isInstance(data.instance)) {
                             System.out.println(data);
                             return EMPTY;
                         }
-                        StandardModel out = model.apply(cls.cast(data.instance()));
+                        StandardModel out = model.apply(cls.cast(data.instance));
                         if (out == null) {
                             return EMPTY;
                         }

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import cam72cam.mod.block.BlockType;
+import cam72cam.mod.block.BlockTypeEntity;
+import cam72cam.mod.block.tile.TileEntity;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.packs.*;
@@ -18,6 +21,8 @@ import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraftforge.eventbus.EventBus;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fmllegacy.DatagenModLoader;
 import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
 import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
@@ -97,12 +102,16 @@ public class ModCore {
         ModCore.register(new Internal());
         proxy.setup();
 
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::postInit);
+        bus.addListener(this::preInit);
+        bus.addListener(this::init);
+        bus.addListener(this::postInit);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
+
+        BlockType.BLOCK_REGISTRY.forEach((s, blockDeferredRegister) -> blockDeferredRegister.register(bus));
+        TileEntity.BLOCK_ENTITY_REGISTRY.forEach((s, blockDeferredRegister) -> blockDeferredRegister.register(bus));
 
         MinecraftForge.EVENT_BUS.register(this);
     }

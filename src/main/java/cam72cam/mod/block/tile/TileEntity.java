@@ -19,7 +19,7 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
-import net.minecraft.core.Direction;
+import com.mojang.datafixers.DSL;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -42,8 +42,10 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fmllegacy.RegistryObject;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
@@ -55,11 +57,12 @@ import java.util.function.Supplier;
 /**
  * TileEntity is an internal class that should only be extended when you need to implement
  * an interface.
- *
+ * <p>
  * If you need to create a standard tile entity and wound up here, take a look at BlockEntity instead.
  *
  * @see BlockEntity
  */
+//Is BlockEntity
 public class TileEntity extends net.minecraft.world.level.block.entity.BlockEntity {
     private static final Map<String, BlockEntityType<? extends TileEntity>> types = HashBiMap.create();
     // InstanceId -> Supplier mapping
@@ -67,13 +70,15 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     private static final Map<String, BlockTypeEntity> blocks = HashBiMap.create();
 
     // Set during initialization
-    private final BlockEntity instance;
+    public final BlockEntity instance;
     public boolean hasTileData;
 
     // Cached
     private Vec3i umcPos;
     private World umcWorld;
 
+    public static final HashMap<String, DeferredRegister<BlockEntityType<?>>> BLOCK_ENTITY_REGISTRY = new HashMap<>();
+    public static final HashMap<Identifier, RegistryObject<BlockEntityType<?>>> KEYS = new HashMap<>();
     /**
      * Used only by BlockEntity to construct an instance to register.
      * <ul>
@@ -151,30 +156,33 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @param instance constructor
      * @param id Block Entity ID
      */
-    public static void register(Supplier<BlockEntity> instance, Identifier id, BlockTypeEntity blockType) {
+    public static void register(Supplier<BlockEntity> instance, Identifier id, BlockTypeEntity blockType, BlockEntityType type, RegistryObject obj) {
         registry.put(id.toString(), instance);
         blocks.put(id.toString(), blockType);
 
         BlockEntity example = instance.get();
 
-        // Force legacy registration
         example.supplier(id);
+        // Force legacy registration
+//        example.supplier(id);
 
-        CommonEvents.Tile.REGISTER.subscribe(() -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
-                TileEntity tile = example.supplier(id);
-                tile.setBlockState(state);
-                return tile;
-            }, new HashSet<>() {
-                public boolean contains(Object var1) {
-                    // WHYYYYYYYYYYYYYYYY
-                    return true;
-                }
-            }, null);
-            type.setRegistryName(id.internal);
-            types.put(id.toString(), type);
-            ForgeRegistries.BLOCK_ENTITIES.register(type);
-        });
+        types.put(id.toString(), type);
+        KEYS.put(id, obj);
+//        CommonEvents.Tile.REGISTER.subscribe(() -> {
+//            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
+//                TileEntity tile = example.supplier(id);
+//                tile.setBlockState(state);
+//                return tile;
+//            }, new HashSet<>() {
+//                public boolean contains(Object var1) {
+//                    // WHYYYYYYYYYYYYYYYY
+//                    return true;
+//                }
+//            }, null);
+//            type.setRegistryName(id.internal);
+//            types.put(id.toString(), type);
+//            ForgeRegistries.BLOCK_ENTITIES.register(type);
+//        });
     }
 
     public static BlockEntityType<TileEntity> getType(Identifier type) {
@@ -233,7 +241,6 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     @Override
     public CompoundTag save(CompoundTag compound) {
         super.save(compound);
-
         TagCompound data = new TagCompound(compound);
 
         if (instance() != null) {
@@ -259,7 +266,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     /** Active Synchronization from markDirty */
     @Override
     public final CompoundTag getUpdateTag() {
-        return getUpdateTag(false);
+        return getUpdateTag(true);
     }
     public final CompoundTag getUpdateTag(boolean writeUpdate) {
         CompoundTag tag = super.getUpdateTag();
@@ -287,6 +294,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     @Override
     public final void handleUpdateTag(CompoundTag tag) {
         try {
+            System.out.println("111");
             this.load(tag);
             if (instance() != null) {
                 if (tag.contains("umcUpdate")) {
@@ -301,7 +309,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
         }
-        level.sendBlockUpdated(super.worldPosition, null, super.level.getBlockState(super.worldPosition), 3);
+        level.sendBlockUpdated(super.worldPosition, null, super.level.getBlockState(super.worldPosition), Block.UPDATE_ALL_IMMEDIATE);
     }
 
     /** Fire off update packet if on server, re-render if on client */
@@ -309,7 +317,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public void setChanged() {
         super.setChanged();
         if (!level.isClientSide) {
-            level.sendBlockUpdated(getBlockPos(), level.getBlockState(getBlockPos()), level.getBlockState(getBlockPos()), 1 + 2 + 8);
+            level.sendBlockUpdated(getBlockPos(), level.getBlockState(getBlockPos()), level.getBlockState(getBlockPos()), Block.UPDATE_ALL_IMMEDIATE);
             level.updateNeighborsAt(worldPosition, level.getBlockState(getBlockPos()).getBlock());
         }
     }
@@ -483,6 +491,9 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
     /** @return If the BlockEntity instance is loaded */
     public boolean isLoaded() {
+        if(level.isClientSide() && !hasTileData){
+            requestModelDataUpdate();
+        }
         return level != null && (!level.isClientSide || hasTileData);
     }
 
@@ -506,7 +517,9 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     }
 
     /* Render */
-    public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
+    public static final ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
+
+    @Override
     public final IModelData getModelData() {
         return new ModelDataMap.Builder().withInitial(TE_PROPERTY, this).build();
     }

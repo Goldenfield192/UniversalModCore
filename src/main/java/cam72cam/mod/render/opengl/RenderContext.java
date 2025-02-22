@@ -78,7 +78,7 @@ public class RenderContext {
         }
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
+            RenderSystem.setShaderTexture(0, state.texture.getId());
             shader.setSampler("Sampler0", state.texture.getId());
             // TODO normal and spec
             int oldTexture = RenderSystem.getShaderTexture(0);

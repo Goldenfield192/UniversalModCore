@@ -163,7 +163,7 @@ public class VBO {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
 
-            ShaderInstance shader = GameRenderer.getRendertypeCutoutShader();
+            ShaderInstance shader = GameRenderer.getRendertypeEntitySolidShader();
             RenderSystem.setShader(() -> shader);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);

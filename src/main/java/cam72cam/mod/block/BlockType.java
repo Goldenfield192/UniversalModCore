@@ -1,5 +1,6 @@
 package cam72cam.mod.block;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
@@ -28,7 +29,11 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.HashMap;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -51,6 +56,9 @@ public abstract class BlockType {
     /** Mod/name of the block */
     public final Identifier id;
 
+    public static final HashMap<String, DeferredRegister<Block>> BLOCK_REGISTRY = new HashMap<>();
+    public final RegistryObject<Block> self;
+
     /**
      * Construct a new BlockType (backed by a std minecraft block)<br>
      * <br>
@@ -59,11 +67,16 @@ public abstract class BlockType {
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
         internal = getBlock();
-        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
+//        RegistryObject<Block> block = BLOCK.register(name, () -> this.internal);
+//        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
+        if (!BLOCK_REGISTRY.containsKey(modID)) {
+            BLOCK_REGISTRY.put(modID, DeferredRegister.create(ForgeRegistries.BLOCKS, modID));
+        }
+        self = BLOCK_REGISTRY.get(modID).register(name, this::getBlock);
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */
-    protected BlockInternal getBlock() {
+    public BlockInternal getBlock() {
         return new BlockInternal();
     }
 
@@ -146,7 +159,7 @@ public abstract class BlockType {
      * BlockInternal is an internal class that should only be extended when you need to implement
      * an interface.
      */
-    protected class BlockInternal extends net.minecraft.world.level.block.Block {
+    public class BlockInternal extends net.minecraft.world.level.block.Block {
         public BlockInternal() {
             super(Block.Properties.of(BlockType.this.getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)

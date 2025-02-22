@@ -9,9 +9,11 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
+import com.mojang.datafixers.DSL;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -19,14 +21,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
+
+import static cam72cam.mod.block.tile.TileEntity.BLOCK_ENTITY_REGISTRY;
 
 /**
  * Extension to BlockType that integrates with BlockEntities.
- *
+ * <p>
  * Most if not all of the functions exposed are now redirected to the block entity (break/pick/etc...)
  */
+//TODO Migrate to DeferredRegister
 public abstract class BlockTypeEntity extends BlockType {
     // Cached from ctr
     private final boolean isRedstoneProvider;
@@ -34,7 +43,18 @@ public abstract class BlockTypeEntity extends BlockType {
 
     public BlockTypeEntity(String modID, String name) {
         super(modID, name);
-        TileEntity.register(() -> constructBlockEntity(), id, this);
+
+        if(!BLOCK_ENTITY_REGISTRY.containsKey(id.getDomain())){
+            BLOCK_ENTITY_REGISTRY.put(id.getDomain(), DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, id.getDomain()));
+        }
+        BlockEntityType<TileEntity> type = BlockEntityType.Builder.of((pos, state) -> {
+            TileEntity tile = constructBlockEntity().supplier(id);
+            tile.setBlockState(state);
+            return tile;
+        }, self.get()).build(DSL.remainderType());
+        RegistryObject<BlockEntityType<?>> obj = BLOCK_ENTITY_REGISTRY.get(id.getDomain()).register(id.getPath(), () -> type);
+
+        TileEntity.register(this::constructBlockEntity, id, this, type, obj);
         this.isRedstoneProvider = constructBlockEntity() instanceof IRedstoneProvider;
         this.isTickable = constructBlockEntity() instanceof BlockEntityTickable;
 
@@ -64,7 +84,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     */
 
-    protected BlockInternal getBlock() {
+    public BlockInternal getBlock() {
         return new BlockTypeInternal();
     }
 
@@ -156,7 +176,7 @@ public abstract class BlockTypeEntity extends BlockType {
         return 0;
     }
 
-    protected class BlockTypeInternal extends BlockInternal implements EntityBlock {
+    public class BlockTypeInternal extends BlockInternal implements EntityBlock {
         @Override
         public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(BlockPos p_153215_, BlockState p_153216_) {
             TileEntity tile = constructBlockEntity().supplier(id);
