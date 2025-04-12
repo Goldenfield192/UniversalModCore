@@ -19,11 +19,9 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -114,7 +112,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             if (data != null && legacyID.toString().equals(data.getString("id"))) {
                 BlockState myState = state;
                 if (myState == null) {
-                    myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
+                    myState = blocks.get(data.getString("instanceId")).internal.get().defaultBlockState();
                 }
                 data.putString("id", ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(((EntityBlock)myState.getBlock()).newBlockEntity(null, null).getType()).toString());
                 return myState;

@@ -52,7 +52,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     /** Hack for initializing a "fake" te */
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = ((TileEntity) ((BlockTypeInternal)internal).newBlockEntity(pos.internal(), null));
+        TileEntity te = ((TileEntity) ((BlockTypeInternal)internal.get()).newBlockEntity(pos.internal(), null));
         te.hasTileData = true;
         te.setLevel(world.internal);
         return te.instance();

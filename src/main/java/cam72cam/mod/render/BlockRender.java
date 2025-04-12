@@ -133,7 +133,7 @@ public class BlockRender {
         renderers.put(((BlockTypeEntity)block).id, (te) -> model.apply(cls.cast(te)));
 
         colors.add((blockColors) -> {
-            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getAverageGrassColor(worldIn, pos) : GrassColor.get(0.5D, 1.0D), block.internal);
+            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getAverageGrassColor(worldIn, pos) : GrassColor.get(0.5D, 1.0D), block.internal.get());
         });
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
@@ -185,7 +185,7 @@ public class BlockRender {
 
                 @Override
                 public TextureAtlasSprite getParticleIcon() {
-                    if (block.internal.defaultMapColor() == MapColor.METAL) {
+                    if (block.internal.get().defaultMapColor() == MapColor.METAL) {
                         return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
                     }
                     return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.STONE.defaultBlockState()).getParticleIcon();

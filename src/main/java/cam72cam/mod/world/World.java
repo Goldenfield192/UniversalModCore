@@ -522,12 +522,12 @@ public class World {
 
     /** If block is the given type */
     public boolean isBlock(Vec3i pos, BlockType block) {
-        return internal.getBlockState(pos.internal()).getBlock() == block.internal;
+        return internal.getBlockState(pos.internal()).getBlock() == block.internal.get();
     }
 
     /** Set block to a given block type */
     public void setBlock(Vec3i pos, BlockType block) {
-        internal.setBlockAndUpdate(pos.internal(), block.internal.defaultBlockState());
+        internal.setBlockAndUpdate(pos.internal(), block.internal.get().defaultBlockState());
     }
 
     /** Set a block to given stack (best guestimate) */
@@ -692,7 +692,7 @@ public class World {
      * @param updateObservers
      */
     public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
-        this.internal.updateNeighborsAt(pos.internal(), blockType.internal);
+        this.internal.updateNeighborsAt(pos.internal(), blockType.internal.get());
     }
 
     public enum ParticleType {

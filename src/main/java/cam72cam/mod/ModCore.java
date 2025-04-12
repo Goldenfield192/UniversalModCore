@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import cam72cam.mod.registry.Registry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.FileUtil;
@@ -94,7 +95,9 @@ public class ModCore {
     public static void register(Mod ctr) {
         mods.add(ctr);
 
+        Registry.create(ctr.modID());
         proxy.event(ModEvent.CONSTRUCT, ctr);
+        Registry.froze(ctr.modID(), FMLJavaModLoadingContext.get().getModEventBus());
     }
 
     /** Called during Mod Construction phase */

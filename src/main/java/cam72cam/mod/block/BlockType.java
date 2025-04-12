@@ -7,6 +7,7 @@ import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.registry.Registry;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
@@ -29,6 +30,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -46,7 +48,7 @@ public abstract class BlockType {
     }
 
     /** Wraps the minecraft construct, do not use directly. */
-    public net.minecraft.world.level.block.Block internal;
+    public RegistryObject<Block> internal;
 
     /** Mod/name of the block */
     public final Identifier id;
@@ -58,10 +60,11 @@ public abstract class BlockType {
      */
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
-        CommonEvents.Block.REGISTER.subscribe(helper -> {
-            internal = getBlock();
-            helper.register(id.internal, internal);
-        });
+//        CommonEvents.Block.REGISTER.subscribe(helper -> {
+//            internal = getBlock();
+//            helper.register(id.internal, internal);
+//        });
+        this.internal = Registry.getRegistry(modID).BLOCK.register(name, this::getBlock);
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */
@@ -95,10 +98,7 @@ public abstract class BlockType {
         return false;
     }
 
-
-    /*
-    Public functionality
-     */
+    /* Public functionality */
 
     /** Called when the block is broken */
     public abstract void onBreak(World world, Vec3i pos);
