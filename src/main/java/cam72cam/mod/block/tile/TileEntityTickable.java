@@ -4,6 +4,8 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockEntityTickable;
 import cam72cam.mod.resource.Identifier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * TileEntityTickable is an internal class which wraps TileEntity and implements ITickable.  Is paired with
@@ -29,8 +31,8 @@ public class TileEntityTickable extends TileEntity {
      * @see BlockEntity
      * @param id Block Entity ID
      */
-    public TileEntityTickable(Identifier id) {
-        super(id);
+    public TileEntityTickable(Identifier id, BlockPos pos, BlockState state) {
+        super(id, pos, state);
     }
 
     private BlockEntityTickable tickable;

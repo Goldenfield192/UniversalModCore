@@ -11,6 +11,7 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.registry.Registry;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
@@ -19,6 +20,7 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
+import com.mojang.datafixers.DSL;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -90,6 +92,12 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         instance.internal = this;
     }
 
+    public TileEntity(Identifier id, BlockPos pos, BlockState state) {
+        super(types.get(id.toString()), pos, state);
+        instance = registry.get(id.toString()).get();
+        instance.internal = this;
+    }
+
     public void setPos(BlockPos pos) {
         ((BlockPos.MutableBlockPos)worldPosition).set(pos);
     }
@@ -120,6 +128,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             return null;
         });
     }
+
     static {
         registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
 
@@ -153,22 +162,25 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         BlockEntity example = instance.get();
 
         // Force legacy registration
-        example.supplier(id);
+//        example.supplier(id);
 
-        CommonEvents.Tile.REGISTER.subscribe(helper -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
-                TileEntity tile = example.supplier(id);
-                tile.setBlockState(state);
-                return tile;
-            }, new HashSet<>() {
-                public boolean contains(Object var1) {
-                    // WHYYYYYYYYYYYYYYYY
-                    return true;
-                }
-            }, null);
-            types.put(id.toString(), type);
-            helper.register(id.internal, type);
-        });
+//        CommonEvents.Tile.REGISTER.subscribe(helper -> {
+//            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
+//                TileEntity tile = example.supplier(id);
+//                tile.setBlockState(state);
+//                return tile;
+//            }, new HashSet<>() {
+//                public boolean contains(Object var1) {
+//                    // WHYYYYYYYYYYYYYYYY
+//                    return true;
+//                }
+//            }, null);
+//            types.put(id.toString(), type);
+//            helper.register(id.internal, type);
+//        });
+
+        Registry.getRegistry(id.getDomain()).BLOCK_ENTITY.register(id.getPath(), () ->
+                BlockEntityType.Builder.of((pos, state) -> example.supplier(id, pos, state), blockType.internal.get()).build(DSL.remainderType()));
     }
 
     public static BlockEntityType<TileEntity> getType(Identifier type) {

@@ -34,12 +34,13 @@ public abstract class BlockTypeEntity extends BlockType {
 
     public BlockTypeEntity(String modID, String name) {
         super(modID, name);
-        TileEntity.register(() -> constructBlockEntity(), id, this);
+
+        TileEntity.register(this::constructBlockEntity, id, this);
         this.isRedstoneProvider = constructBlockEntity() instanceof IRedstoneProvider;
         this.isTickable = constructBlockEntity() instanceof BlockEntityTickable;
 
         // Force supplier load (may trigger static blocks like TE registration)
-        constructBlockEntity().supplier(id);
+//        constructBlockEntity().supplier(id);
     }
 
     /** Supply your custom BlockEntity constructor here */
@@ -159,10 +160,7 @@ public abstract class BlockTypeEntity extends BlockType {
     protected class BlockTypeInternal extends BlockInternal implements EntityBlock {
         @Override
         public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(BlockPos p_153215_, BlockState p_153216_) {
-            TileEntity tile = constructBlockEntity().supplier(id);
-            tile.setBlockState(p_153216_);
-            tile.setPos(p_153215_);
-            return tile;
+            return constructBlockEntity().supplier(id, p_153215_, p_153216_);
         }
 
 

@@ -14,6 +14,8 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Block entity is the building block for more functional blocks in game.  It allows you to save complex data and
@@ -144,7 +146,7 @@ public abstract class BlockEntity {
      * @param id BlockTypeEntity identifier
      * @return A new instance of the custom TileEntity
      */
-    public TileEntity supplier(Identifier id) {
-        return new TileEntity(id);
+    public TileEntity supplier(Identifier id, BlockPos pos, BlockState state) {
+        return new TileEntity(id, pos, state);
     }
 }

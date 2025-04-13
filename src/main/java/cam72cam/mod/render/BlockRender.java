@@ -82,7 +82,7 @@ public class BlockRender {
         colors.forEach(r -> r.accept(blockColors));
 
         renderers.forEach((type, render) -> {
-            BlockEntityRenderers.register(TileEntity.getType(type), (ted) -> new BlockEntityRenderer<TileEntity>() {
+            BlockEntityRenderers.register(TileEntity.getType(type), (ted) -> new BlockEntityRenderer<>() {
                 @Override
                 public boolean shouldRender(TileEntity p_173568_, Vec3 p_173569_) {
                     return p_173568_.instance() == null || Vec3.atCenterOf(p_173568_.getBlockPos()).closerThan(p_173569_, p_173568_.instance().getRenderDistance());
@@ -107,7 +107,7 @@ public class BlockRender {
                         return;
                     }
 
-                    RenderType.solid().setupRenderState();
+                    RenderType.translucent().setupRenderState();
 
                     //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
@@ -115,7 +115,7 @@ public class BlockRender {
                     int k = combinedLightIn / 65536;
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
-                    RenderType.solid().clearRenderState();
+                    RenderType.translucent().clearRenderState();
                 }
 
                 @Override
