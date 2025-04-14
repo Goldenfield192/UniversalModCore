@@ -8,14 +8,13 @@ import cam72cam.mod.resource.Identifier;
 /**
  * TileEntityTickable is an internal class which wraps TileEntity and implements ITickable.  Is paired with
  * BlockEntityTickable.
- *
+ * <p>
  * If you need to create a standard tile entity and wound up here, take a look at BlockEntityTickable instead.
  *
  * @see BlockEntityTickable
  */
 public class TileEntityTickable extends TileEntity {
     static {
-
         registerLegacyTE(new Identifier(ModCore.MODID, "hack_tickable"));
     }
 

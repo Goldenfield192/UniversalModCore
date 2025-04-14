@@ -15,6 +15,7 @@ public class Registry {
     public final DeferredRegister<Block> BLOCK;
     public final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY;
     public final DeferredRegister<Item> ITEM;
+
     private Registry(String modID){
         this.BLOCK = DeferredRegister.create(ForgeRegistries.BLOCKS, modID);
         this.BLOCK_ENTITY = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, modID);

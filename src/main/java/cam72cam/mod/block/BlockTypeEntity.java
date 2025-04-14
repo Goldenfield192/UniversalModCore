@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extension to BlockType that integrates with BlockEntities.
- *
+ * <p>
  * Most if not all of the functions exposed are now redirected to the block entity (break/pick/etc...)
  */
 public abstract class BlockTypeEntity extends BlockType {
@@ -39,7 +39,7 @@ public abstract class BlockTypeEntity extends BlockType {
         this.isTickable = constructBlockEntity() instanceof BlockEntityTickable;
 
         // Force supplier load (may trigger static blocks like TE registration)
-        constructBlockEntity().supplier(id);
+//        constructBlockEntity().supplier(id);
     }
 
     /** Supply your custom BlockEntity constructor here */
@@ -169,7 +169,9 @@ public abstract class BlockTypeEntity extends BlockType {
         @Nullable
         @Override
         public <T extends net.minecraft.world.level.block.entity.BlockEntity> BlockEntityTicker<T> getTicker(Level p_154683_, BlockState p_154684_, BlockEntityType<T> p_154685_) {
-            return p_154684_.getBlock() instanceof BlockTypeInternal && isTickable ? (BlockEntityTicker<T>)(BlockEntityTicker<TileEntityTickable>)this::ticker : null;
+            return p_154684_.getBlock() instanceof BlockTypeInternal && isTickable
+                   ? (BlockEntityTicker<T>)(BlockEntityTicker<TileEntityTickable>)this::ticker
+                   : null;
         }
 
         @Override

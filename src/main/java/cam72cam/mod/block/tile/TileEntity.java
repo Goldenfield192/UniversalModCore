@@ -11,6 +11,7 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.registry.Registry;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
@@ -19,6 +20,7 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
+import com.mojang.datafixers.DSL;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -40,6 +42,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -50,16 +53,16 @@ import java.util.function.Supplier;
 /**
  * TileEntity is an internal class that should only be extended when you need to implement
  * an interface.
- *
+ * <p>
  * If you need to create a standard tile entity and wound up here, take a look at BlockEntity instead.
  *
  * @see BlockEntity
  */
 public class TileEntity extends net.minecraft.world.level.block.entity.BlockEntity {
-    private static final Map<String, BlockEntityType<? extends TileEntity>> types = HashBiMap.create();
     // InstanceId -> Supplier mapping
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
     private static final Map<String, BlockTypeEntity> blocks = HashBiMap.create();
+    public static final HashMap<String, RegistryObject<BlockEntityType<TileEntity>>> tileEntities = new HashMap<>();
 
     // Set during initialization
     private final BlockEntity instance;
@@ -68,6 +71,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     // Cached
     private Vec3i umcPos;
     private World umcWorld;
+
 
     /**
      * Used only by BlockEntity to construct an instance to register.
@@ -80,7 +84,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @param id Block Entity ID
      */
     public TileEntity(Identifier id) {
-        super(types.get(id.toString()), new BlockPos.MutableBlockPos() {
+        super(tileEntities.get(id.toString()).get(), new BlockPos.MutableBlockPos() {
             @Override
             public BlockPos immutable() {
                 return this; // BAHAHAHAHA
@@ -152,27 +156,17 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
         BlockEntity example = instance.get();
 
-        // Force legacy registration
-        example.supplier(id);
-
-        CommonEvents.Tile.REGISTER.subscribe(helper -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
-                TileEntity tile = example.supplier(id);
-                tile.setBlockState(state);
-                return tile;
-            }, new HashSet<>() {
-                public boolean contains(Object var1) {
-                    // WHYYYYYYYYYYYYYYYY
-                    return true;
-                }
-            }, null);
-            types.put(id.toString(), type);
-            helper.register(id.internal, type);
-        });
+        RegistryObject<BlockEntityType<TileEntity>> object = Registry.getRegistry(id.getDomain()).BLOCK_ENTITY.register(id.getPath(), () ->
+                BlockEntityType.Builder.of((pos, state) -> {
+                    TileEntity tile = example.supplier(id);
+                    tile.setBlockState(state);
+                    return tile;
+                }, blockType.internal.get()).build(DSL.remainderType()));
+        tileEntities.put(id.toString(), object);
     }
 
     public static BlockEntityType<TileEntity> getType(Identifier type) {
-        return (BlockEntityType<TileEntity>) types.get(type.toString());
+        return tileEntities.get(type.toString()).get();
     }
 
     /** Wrap getPos() in a cached UMC Vec3i */
