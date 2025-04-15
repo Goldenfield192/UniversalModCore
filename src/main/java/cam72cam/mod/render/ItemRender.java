@@ -113,13 +113,13 @@ public class ItemRender {
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
          */
 
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal.get(), new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
     /** Register a complex model for an item */
     public static void register(CustomItem item, IItemModel model) {
         // Link Item to Item Registry Name
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal.get(), new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // Link Item Registry Name to Custom Model
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));

@@ -6,6 +6,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.registry.Registry;
 import cam72cam.mod.render.ItemRender;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
@@ -27,6 +28,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -37,7 +39,7 @@ import java.util.stream.Collectors;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
-    public Item internal;
+    public RegistryObject<Item> internal;
     private final ResourceLocation identifier;
 
     public CustomItem(String modID, String name) {
@@ -50,10 +52,7 @@ public abstract class CustomItem {
             }
         }
 
-        CommonEvents.Item.REGISTER.subscribe(helper -> {
-            internal = new ItemInternal(props);
-            helper.register(identifier, internal);
-        });
+        internal = Registry.getRegistry(modID).ITEM.register(name, () -> new ItemInternal(props));
     }
 
     /** Creative tabs that this should be shown under */
@@ -68,7 +67,7 @@ public abstract class CustomItem {
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
         List<ItemStack> res = new ArrayList<>();
         if (creativeTab == null || getCreativeTabs().contains(creativeTab)) {
-            res.add(new ItemStack(new net.minecraft.world.item.ItemStack(internal, 1)));
+            res.add(new ItemStack(new net.minecraft.world.item.ItemStack(internal.get(), 1)));
         }
         return res;
     }
@@ -100,7 +99,7 @@ public abstract class CustomItem {
 
     /** Identifier of this item */
     public final Identifier getRegistryName() {
-        return new Identifier(ForgeRegistries.ITEMS.getKey(internal));
+        return new Identifier(ForgeRegistries.ITEMS.getKey(internal.get()));
     }
 
     private class ItemInternal extends Item {

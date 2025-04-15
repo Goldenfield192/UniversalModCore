@@ -30,9 +30,16 @@ public class ItemStack {
 
     /** Construct from customItem */
     public ItemStack(CustomItem item, int i) {
+        try{
+            item.internal.get();
+        } catch (NullPointerException e){
+            //java.lang.NullPointerException: Registry Object not present:
+            supplier = () -> net.minecraft.world.item.ItemStack.EMPTY;
+            return;
+        }
         supplier = () -> item.internal == null ?
                 net.minecraft.world.item.ItemStack.EMPTY : //1.20.1 (-2) This will break things...
-                new net.minecraft.world.item.ItemStack(item.internal, i);
+                new net.minecraft.world.item.ItemStack(item.internal.get(), i);
     }
 
     @Deprecated
@@ -111,7 +118,7 @@ public class ItemStack {
     }
 
     public boolean is(CustomItem item) {
-        return item.internal == this.internal().getItem();
+        return item.internal.get() == this.internal().getItem();
     }
 
     /** Is a bucket or similar item */

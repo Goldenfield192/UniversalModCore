@@ -20,6 +20,7 @@ public class RenderState {
     protected Texture normals = null;
     protected Texture specular = null;
     protected float[] color = null;
+    protected boolean cull;
     protected Map<Integer, Boolean> bools = new HashMap<>();
     protected Boolean depth_mask;
     protected Boolean smooth_shading = null;
@@ -212,7 +213,7 @@ public class RenderState {
         return this;
     }
     public RenderState cull_face(boolean cull_face) {
-        this.bools.put(GL11.GL_CULL_FACE, cull_face);
+        this.cull = cull_face;
         return this;
     }
     public RenderState lightmap(float block, float sky) {

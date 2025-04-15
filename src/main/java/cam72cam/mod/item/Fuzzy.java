@@ -203,7 +203,7 @@ public class Fuzzy {
 
     /** Use to register an item */
     public Fuzzy add(CustomItem item) {
-        return add(item.internal);
+        return add(item.internal.get());
     }
 
     /** Pull other fuzzy into this one */

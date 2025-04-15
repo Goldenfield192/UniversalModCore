@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
@@ -93,23 +94,24 @@ public class RenderContext {
             RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
-        /* TODO 1.17.1
+
+
         state.bools.forEach((glId, value) -> {
-            boolean oldValue = GL11.glGetBoolean(glId);
+            boolean oldValue = GL32.glGetBoolean(glId);
             applyBool(glId, value);
             restore.add(() -> applyBool(glId, oldValue));
         });
         if (state.depth_mask != null) {
-            boolean oldDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-            GL11.glDepthMask(state.depth_mask);
-            restore.add(() -> GL11.glDepthMask(oldDepthMask));
+            boolean oldDepthMask = GL32.glGetBoolean(GL32.GL_DEPTH_WRITEMASK);
+            GL32.glDepthMask(state.depth_mask);
+            restore.add(() -> GL32.glDepthMask(oldDepthMask));
         }
 
         if (state.smooth_shading != null) {
-            int oldShading = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
-            GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
-            restore.add(() -> GL11.glShadeModel(oldShading));
-        }*/
+            int oldShading = GL32.glGetInteger(GL32.GL_SHADE_MODEL);
+            GL32.glShadeModel(state.smooth_shading ? GL32.GL_SMOOTH : GL32.GL_FLAT);
+            restore.add(() -> GL32.glShadeModel(oldShading));
+        }
 
         shader.apply();
         checkError();
