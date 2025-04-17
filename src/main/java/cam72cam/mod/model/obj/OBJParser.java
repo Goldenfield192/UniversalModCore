@@ -28,7 +28,7 @@ public class OBJParser {
     private final float scale;
 
     private final List<OBJGroup> correctedGroups;
-    private final VertexBuffer buffer;
+    private final ElementBuffer buffer;
     private final String[] correctedFaceMaterials;
     private boolean smoothShading = false;
 
@@ -121,12 +121,9 @@ public class OBJParser {
         int[] faceVerts = this.faceVerts.array();
         this.correctedFaceMaterials = new String[faceMaterials.size()];
 
-        this.buffer = new VertexBuffer(faceMaterials.size(), hasNormals);
+        this.buffer = new ElementBuffer(faceMaterials.size(), hasNormals);
 
         int faceCount = 0;
-        int vertexOffset = buffer.vertexOffset;
-        int normalOffset = buffer.normalOffset;
-        int textureOffset = buffer.textureOffset;
 
         for (OBJGroup group : groups) {
             int startFace = faceCount;
@@ -142,10 +139,7 @@ public class OBJParser {
                     float x = vertices[vertex+0];
                     float y = vertices[vertex+1];
                     float z = vertices[vertex+2];
-                    buffer.data[vertexOffset+0] = x;
-                    buffer.data[vertexOffset+1] = y;
-                    buffer.data[vertexOffset+2] = z;
-                    vertexOffset += buffer.stride;
+                    ElementBuffer.Vertex vert = new ElementBuffer.Vertex(x, y, z);
 
                     if (!usedVerts[vertex/3]) {
                         usedVerts[vertex/3] = true;
@@ -154,21 +148,16 @@ public class OBJParser {
 
                     int texture = faceVerts[faceVertexIdx+1] * 2;
                     if (texture >= 0) {
-                        buffer.data[textureOffset+0] = vertexTextures[texture+0];
-                        buffer.data[textureOffset+1] = vertexTextures[texture+1];
+                        vert.uv(vertexTextures[texture+0], vertexTextures[texture+1]);
                     } else {
-                        buffer.data[textureOffset+0] = UNSPECIFIED;
-                        buffer.data[textureOffset+1] = UNSPECIFIED;
+                        vert.uv(UNSPECIFIED, UNSPECIFIED);
                     }
-                    textureOffset += buffer.stride;
 
                     if (hasNormals) {
                         int normal = faceVerts[faceVertexIdx+2] * 3;
-                        buffer.data[normalOffset+0] = vertexNormals[normal+0];
-                        buffer.data[normalOffset+1] = vertexNormals[normal+1];
-                        buffer.data[normalOffset+2] = vertexNormals[normal+2];
-                        normalOffset += buffer.stride;
+                        vert.normal(vertexNormals[normal+0], vertexNormals[normal+1], vertexNormals[normal+2]);
                     }
+                    vert.setInBuffer(buffer);
                 }
                 faceCount++;
             }
@@ -203,7 +192,7 @@ public class OBJParser {
             correctedGroups.add(new OBJGroup(group.name, startFace, faceCount-1, groupMin, groupMax, normal));
         }
     }
-    public VertexBuffer getBuffer() {
+    public ElementBuffer getBuffer() {
         return buffer;
     }
     public List<OBJGroup> getGroups() {

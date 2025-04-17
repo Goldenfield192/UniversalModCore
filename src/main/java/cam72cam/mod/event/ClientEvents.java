@@ -10,15 +10,12 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
-import cam72cam.mod.render.opengl.VBO;
+import cam72cam.mod.render.opengl.EBO;
 import cam72cam.mod.world.World;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -45,7 +42,7 @@ public class ClientEvents {
         World.registerClientEvnets();
         CommonEvents.Entity.REGISTER.post(() -> REGISTER_ENTITY.execute(Runnable::run));
 
-        VBO.registerClientEvents();
+        EBO.registerClientEvents();
         CustomTexture.registerClientEvents();
 
         // Forge does not fire world unloaded client side

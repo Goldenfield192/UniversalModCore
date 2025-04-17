@@ -25,7 +25,7 @@ import static cam72cam.mod.model.obj.ImageUtils.*;
 
 public class OBJModel {
     private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
-    public final OBJRender vbo;
+    public final OBJRender ebo;
     public final int textureWidth;
     public final int textureHeight;
     public final int defaultLodSize;
@@ -74,15 +74,21 @@ public class OBJModel {
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
         );
 
-        Supplier<GenericByteBuffer> vboData = cache.getResource(
-                "model.bin",
-                builder -> new GenericByteBuffer(builder.vertexBufferObject().data)
+        Supplier<GenericByteBuffer> eboData = cache.getResource(
+                "model.ebo.bin",
+                builder -> new GenericByteBuffer(builder.elementBufferObject().getEBO().array())
         );
+
+        Supplier<GenericByteBuffer> vboData = cache.getResource(
+                "model.vbo.bin",
+                builder -> new GenericByteBuffer(builder.elementBufferObject().getVBO().array())
+        );
+
         TagCompound meta = new TagCompound(cache.getResource(
                 "meta.nbt",
                 builder -> {
                     TagCompound data = new TagCompound();
-                    data.setBoolean("hasVertexNormals", builder.vertexBufferObject().hasNormals);
+                    data.setBoolean("hasVertexNormals", builder.elementBufferObject().hasNormals);
                     data.setBoolean("isSmoothShading", builder.isSmoothShading());
                     if (Config.getMaxTextureSize() > 0) {
                         data.setInteger("textureWidth", builder.getTextureWidth());
@@ -168,7 +174,7 @@ public class OBJModel {
 
         this.groups = meta.getList("groups", OBJGroup::new).stream().collect(Collectors.toMap(k -> k.name, v -> v, (x, y) -> y, LinkedHashMap::new));
 
-        this.vbo = new OBJRender(this, () -> new VertexBuffer(vboData.get().floats(), hasVertexNormals));
+        this.ebo = new OBJRender(this, () -> new ElementBuffer(vboData.get().floats(), eboData.get().ints(), hasVertexNormals));
 
         this.hash = cache.close();
 
@@ -232,11 +238,11 @@ public class OBJModel {
     /** WARNING This is a very slow function and should be used for debug only */
     public List<Vec3d> points(OBJGroup group) {
         List<Vec3d> points = new ArrayList<>();
-        VertexBuffer vbo = this.vbo.buffer.get();
+        ElementBuffer ebo = this.ebo.buffer.get();
         for (int face = group.faceStart; face <= group.faceStop; face++) {
             for (int point = 0; point < 3; point++) {
-                int idx = (face * 3 + point) * vbo.stride + vbo.vertexOffset;
-                points.add(new Vec3d(vbo.data[idx], vbo.data[idx+1], vbo.data[idx+2]));
+                int vert = face * 3 + point;
+                points.add(new Vec3d(ebo.origVertex.get(vert).vx, ebo.origVertex.get(vert).vy, ebo.origVertex.get(vert).vz));
             }
         }
         return points;
@@ -320,11 +326,11 @@ public class OBJModel {
         public OBJRender.Binding bind(RenderState state, boolean waitForLoad) {
             state = state.clone();
             apply(state);
-            return vbo.bind(state, waitForLoad);
+            return ebo.bind(state, waitForLoad);
         }
 
         public OBJRender.Builder builder() {
-            return vbo.subModel(this::apply);
+            return ebo.subModel(this::apply);
         }
     }
 
@@ -334,6 +340,6 @@ public class OBJModel {
                 texture.dealloc();
             }
         }
-        vbo.free();
+        ebo.free();
     }
 }

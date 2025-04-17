@@ -1,12 +1,12 @@
 package cam72cam.mod.render.obj;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.model.obj.ElementBuffer;
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
-import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.opengl.EBO;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.util.With;
-import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.render.opengl.RenderState;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -15,11 +15,11 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class OBJRender extends VBO {
+public class OBJRender extends EBO {
     public final OBJModel model;
-    public final Supplier<VertexBuffer> buffer;
+    public final Supplier<ElementBuffer> buffer;
 
-    public OBJRender(OBJModel model, Supplier<VertexBuffer> buffer) {
+    public OBJRender(OBJModel model, Supplier<ElementBuffer> buffer) {
         super(buffer, s -> {});
         this.model = model;
         this.buffer = buffer;
@@ -32,7 +32,7 @@ public class OBJRender extends VBO {
         return new Binding(state, waitForLoad);
     }
 
-    public class Binding extends VBO.Binding {
+    public class Binding extends EBO.Binding {
         protected Binding(RenderState state, boolean wait) {
             super(state, wait);
         }
@@ -66,13 +66,13 @@ public class OBJRender extends VBO {
                 } else if (info.faceStart == stop) {
                     stop = info.faceStop + 1;
                 } else {
-                    GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                    GL32.glDrawElements(GL32.GL_TRIANGLES, (stop - start) * 3, GL32.GL_UNSIGNED_INT, (long) start * 3 * buffer.get().stride * Float.BYTES);
                     start = info.faceStart;
                     stop = info.faceStop + 1;
                 }
             }
             if (start != stop) {
-                GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                GL32.glDrawElements(GL32.GL_TRIANGLES, (stop - start) * 3, GL32.GL_UNSIGNED_INT, (long) start * 3 * buffer.get().stride * Float.BYTES);
             }
             RenderContext.checkError();
         }
@@ -87,21 +87,23 @@ public class OBJRender extends VBO {
         }
 
         private class Buffer {
-            private VertexBuffer vb;
-            private float[] built;
+            private ElementBuffer eb;
+            private float[] vertex;
+            private int[] indices;
             private int builtIdx;
 
             private Buffer() {
-                this.vb = buffer.get();
-                this.built = new float[vb.data.length];
+                this.eb = buffer.get();
+                this.vertex = new float[eb.getVBO().array().length];
+                this.indices = new int[eb.getEBO().array().length];
                 this.builtIdx = 0;
             }
 
             private void require(int size) {
-                while (built.length <= builtIdx + size) {
-                    float[] tmp = new float[built.length * 2];
-                    System.arraycopy(built, 0, tmp, 0, builtIdx);
-                    built = tmp;
+                while (vertex.length <= builtIdx + size) {
+                    float[] tmp = new float[vertex.length * 2];
+                    System.arraycopy(vertex, 0, tmp, 0, builtIdx);
+                    vertex = tmp;
                 }
             }
 
@@ -109,7 +111,7 @@ public class OBJRender extends VBO {
                 require(buff.length);
 
                 if (m != null) {
-                    for (int i = 0; i < buff.length; i += vb.stride) {
+                    for (int i = 0; i < buff.length; i += eb.stride) {
                         float x = buff[i+0];
                         float y = buff[i+1];
                         float z = buff[i+2];
@@ -120,16 +122,16 @@ public class OBJRender extends VBO {
                     }
                 }
 
-                System.arraycopy(buff, 0, built, builtIdx, buff.length);
+                System.arraycopy(buff, 0, vertex, builtIdx, buff.length);
                 builtIdx += buff.length;
             }
 
             public void draw(Matrix4 m) {
                 if (m == null) {
-                    add(vb.data, null);
+                    add(eb.data, null);
                 } else {
-                    float[] buff = new float[vb.data.length];
-                    System.arraycopy(vb.data, 0, buff, 0, vb.data.length);
+                    float[] buff = new float[eb.data.length];
+                    System.arraycopy(eb.data, 0, buff, 0, eb.data.length);
                     add(buff, m);
                 }
             }
@@ -138,22 +140,22 @@ public class OBJRender extends VBO {
                 for (String group : groups) {
                     OBJGroup info = model.groups.get(group);
 
-                    int start = info.faceStart * vb.vertsPerFace * vb.stride;
-                    int stop = (info.faceStop + 1) * vb.vertsPerFace * vb.stride;
+                    int start = info.faceStart * eb.vertsPerFace * eb.stride;
+                    int stop = (info.faceStop + 1) * eb.vertsPerFace * eb.stride;
 
                     float[] buff = new float[stop - start];
-                    System.arraycopy(vb.data, start, buff, 0, stop - start);
+                    System.arraycopy(eb.data, start, buff, 0, stop - start);
                     add(buff, m);
                 }
             }
 
-            public VertexBuffer build() {
+            public ElementBuffer build() {
                 float[] out = new float[builtIdx];
-                System.arraycopy(built, 0, out, 0, builtIdx);
-                boolean hasNormals = vb.hasNormals;
-                vb = null;
-                built = null;
-                return new VertexBuffer(out, hasNormals);
+                System.arraycopy(vertex, 0, out, 0, builtIdx);
+                boolean hasNormals = eb.hasNormals;
+                eb = null;
+                vertex = null;
+                return new ElementBuffer(out, hasNormals);
             }
         }
 
@@ -173,9 +175,9 @@ public class OBJRender extends VBO {
             actions.add(b -> b.draw(groups, m));
         }
 
-        public VBO build() {
+        public EBO build() {
             List<Consumer<Buffer>> actions = new ArrayList<>(this.actions); // Snapshot
-            return new VBO(() -> {
+            return new EBO(() -> {
                 Buffer buff = new Buffer();
                 actions.forEach(c -> c.accept(buff));
                 return buff.build();
