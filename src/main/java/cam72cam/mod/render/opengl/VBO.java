@@ -92,7 +92,7 @@ public class VBO {
 
                     GL32.glBindVertexArray(oldVao);
                     GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
-                    GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, oldVbo);
+                    GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, oldEbo);
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
@@ -105,7 +105,7 @@ public class VBO {
                 if(!vb.hasEbo){
                     ElementBufferGenerator.genEBO(vb);
                 }
-                this.length = vb.vbo.length / (vb.stride);
+                this.length = vb.ebo.length;
                 this.vbInfo = new VertexBuffer(0, vb.hasNormals);
                 FloatBuffer buffer = BufferUtils.createFloatBuffer(vb.vbo.length);
                 buffer.put(vb.vbo);
