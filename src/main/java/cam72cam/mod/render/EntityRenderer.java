@@ -125,16 +125,17 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     }*/
 
     @Override
-    public void render(T stock, float entityYaw, float partialTicks, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
-        Entity self = stock.getSelf();
+    public void render(T entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int i) {
+        Entity self = entity.getSelf();
 
         RenderType.cutout().setupRenderState();
+        RenderStage.stage = RenderStage.Stage.ENTITY;
 
         //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
         int j = i % 65536;
         int k = i / 65536;
-        RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
+        RenderState state = new RenderState(poseStack).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
@@ -144,6 +145,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         // TODO
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
+        RenderStage.stage = RenderStage.Stage.NONE;
         RenderType.cutout().clearRenderState();
     }
 
