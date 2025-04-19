@@ -1,14 +1,17 @@
 package cam72cam.mod.model.obj;
 
 public class VertexBuffer {
-    public boolean useElement;
-    public float[] indices;
+    //Original data for compatibility
+    public final float[] data;
+
+    public boolean hasEbo = false;
+    public int[] ebo;
+    public float[] vbo;
 
     public final boolean hasNormals;
     public final int vertsPerFace;
     //(vx, vy, vz, u, v, r, g, b, a, nx, ny, nz)
     public final int stride;
-    public final float[] data;
     public final int vertexOffset;
     public final int textureOffset;
     public final int colorOffset;

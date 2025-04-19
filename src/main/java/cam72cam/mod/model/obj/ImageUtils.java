@@ -1,4 +1,4 @@
-package cam72cam.mod.model.common;
+package cam72cam.mod.model.obj;
 
 import cam72cam.mod.ModCore;
 import org.apache.commons.lang3.tuple.Pair;

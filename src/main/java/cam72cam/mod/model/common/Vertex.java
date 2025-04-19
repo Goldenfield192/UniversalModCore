@@ -1,5 +1,7 @@
 package cam72cam.mod.model.common;
 
+import cam72cam.mod.model.obj.Buffers;
+
 public class Vertex {
     public float posX;
     public float posY;
@@ -63,6 +65,41 @@ public class Vertex {
         this.normalY = normalY;
         this.normalZ = normalZ;
         return this;
+    }
+
+    public void writeToFloatBuffer(Buffers.FloatBuffer buffer, boolean enableNormal){
+        buffer.add(this.posX);
+        buffer.add(this.posY);
+        buffer.add(this.posZ);
+        buffer.add(this.u);
+        buffer.add(this.v);
+        buffer.add(this.r);
+        buffer.add(this.g);
+        buffer.add(this.b);
+        buffer.add(this.a);
+        if(enableNormal){
+            buffer.add(this.normalX);
+            buffer.add(this.normalY);
+            buffer.add(this.normalZ);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Vertex{" +
+                "posX=" + posX +
+                ", posY=" + posY +
+                ", posZ=" + posZ +
+                ", u=" + u +
+                ", v=" + v +
+                ", r=" + r +
+                ", g=" + g +
+                ", b=" + b +
+                ", a=" + a +
+                ", normalX=" + normalX +
+                ", normalY=" + normalY +
+                ", normalZ=" + normalZ +
+                '}';
     }
 
     public static class Position{

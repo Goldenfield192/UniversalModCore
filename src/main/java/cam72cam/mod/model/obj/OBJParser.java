@@ -123,6 +123,7 @@ public class OBJParser {
             List<Vec3d> points = new ArrayList<>();
             // primitive array here only takes up maybe 1-2MB at worst
             boolean[] usedVerts = new boolean[faces.size() * 3];
+            //Setup origData
             for (int faceIndex = group.faceStart; faceIndex <= group.faceStop; faceIndex++) {
                 Face face = faces.get(faceIndex);
                 correctedFaceMaterials[faceCount] = face.materialName;
@@ -156,7 +157,7 @@ public class OBJParser {
                 faceCount++;
             }
 
-            //Setup model normal
+            //Setup group normal
             Vec3d first = points.get(0);
             Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
             Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
@@ -238,6 +239,7 @@ public class OBJParser {
                 index[i] = vertexMap.get(strings[i]);
             } else {
                 vertexMap.put(strings[i], vertices.size());
+                index[i] = vertices.size();
                 vertices.add(parsePoint(strings[i]));
             }
         }

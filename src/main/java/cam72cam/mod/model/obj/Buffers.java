@@ -1,4 +1,4 @@
-package cam72cam.mod.model.common;
+package cam72cam.mod.model.obj;
 
 public class Buffers {
     public static class FloatBuffer {
