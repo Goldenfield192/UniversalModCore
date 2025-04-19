@@ -66,13 +66,17 @@ public class OBJRender extends VBO {
                 } else if (info.faceStart == stop) {
                     stop = info.faceStop + 1;
                 } else {
-                    GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                    int indexCount = (stop - start) * 3;
+                    long byteOffset = (long) start * 3 * 4;
+                    GL32.glDrawElements(GL32.GL_TRIANGLES, indexCount, GL32.GL_UNSIGNED_INT, byteOffset);
                     start = info.faceStart;
                     stop = info.faceStop + 1;
                 }
             }
             if (start != stop) {
-                GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                int indexCount = (stop - start) * 3;
+                long byteOffset = (long) start * 3 * 4;
+                GL32.glDrawElements(GL32.GL_TRIANGLES, indexCount, GL32.GL_UNSIGNED_INT, byteOffset);
             }
             RenderContext.checkError();
         }

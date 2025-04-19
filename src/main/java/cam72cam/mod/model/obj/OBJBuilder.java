@@ -2,6 +2,7 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.model.common.ElementBufferGenerator;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 
@@ -140,6 +141,8 @@ public class OBJBuilder {
         }
         this.textureWidth = packer.getWidth();
         this.textureHeight = packer.getHeight();
+
+        ElementBufferGenerator.genEBO(vbo);
         ModCore.debug("Building %s took %sms", modelLoc, (System.currentTimeMillis() - start));
     }
 
