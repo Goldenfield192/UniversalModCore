@@ -1,7 +1,5 @@
 package cam72cam.mod.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-
 public class RenderStage {
     public static Stage stage = Stage.NONE;
 
@@ -19,6 +17,7 @@ public class RenderStage {
         BLOCK,
         ITEM,
         ENTITY,
+        GUI,
         NONE
     }
 }

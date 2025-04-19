@@ -2,13 +2,14 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.RenderStage;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
@@ -219,7 +220,9 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onOverlayEvent(RenderGameOverlayEvent.Pre event) {
+            RenderStage.stage = RenderStage.Stage.GUI;
             RENDER_OVERLAY.execute(x -> x.accept(event));
+            RenderStage.stage = RenderStage.Stage.NONE;
         }
 
         @SubscribeEvent

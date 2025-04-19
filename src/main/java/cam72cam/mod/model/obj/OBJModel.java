@@ -3,13 +3,14 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.obj.OBJRender;
+import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.serialization.*;
+import cam72cam.mod.serialization.ResourceCache;
 import cam72cam.mod.serialization.ResourceCache.GenericByteBuffer;
+import cam72cam.mod.serialization.TagCompound;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -133,7 +134,7 @@ public class OBJModel {
                 for (Integer lodValue : lodValues) {
                     if (lodValue < texSize) {
                         Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
-                        Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.rgba", lodValue),
+                        Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.bgra", lodValue),
                                 builder -> new GenericByteBuffer(
                                         toBGRA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
                         );

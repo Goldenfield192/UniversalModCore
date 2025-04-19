@@ -3,12 +3,14 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.common.ElementBufferGenerator;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.RenderStage;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
@@ -178,7 +180,13 @@ public class VBO {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
 
-            ShaderInstance shader = GameRenderer.getRendertypeCutoutShader();
+            if(RenderStage.stage == RenderStage.Stage.ENTITY){
+                RenderType.entityCutoutNoCull(((CustomTexture)state.texture).textureLocation.internal).setupRenderState();
+            }
+
+            ShaderInstance shader = RenderStage.stage == RenderStage.Stage.ENTITY
+                                    ? GameRenderer.getRendertypeItemEntityTranslucentCullShader()
+                                    : GameRenderer.getRendertypeCutoutShader();
             RenderSystem.setShader(() -> shader);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
@@ -233,6 +241,10 @@ public class VBO {
             this.restore = RenderContext.apply(state).and(() -> {
                 RenderContext.checkError();
                 shader.getVertexFormat().clearBufferState();
+
+                if(RenderStage.stage == RenderStage.Stage.ENTITY){
+                    RenderType.entityCutoutNoCull(((CustomTexture)state.texture).textureLocation.internal).clearRenderState();
+                }
 
                 RenderContext.checkError();
 

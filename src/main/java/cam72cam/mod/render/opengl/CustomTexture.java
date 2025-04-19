@@ -9,25 +9,27 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public abstract class CustomTexture implements Texture {
     private final int width;
     private final int height;
     private final int cacheSeconds;
 
-    public ResourceLocation dynamicLocation;
     public static TextureManager MANAGER;
 
     private static final ExecutorService pool = Executors.newFixedThreadPool(1, runnable -> {
@@ -96,7 +98,6 @@ public abstract class CustomTexture implements Texture {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
 
         NativeImage image;
         try {

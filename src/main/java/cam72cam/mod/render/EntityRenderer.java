@@ -6,10 +6,9 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.opengl.RenderState;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.resources.ResourceLocation;
@@ -128,8 +127,10 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     public void render(T entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int i) {
         Entity self = entity.getSelf();
 
-        RenderType.cutout().setupRenderState();
         RenderStage.stage = RenderStage.Stage.ENTITY;
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+        Minecraft.getInstance().gameRenderer.lightTexture().updateLightTexture(i);
+        Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
         //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
@@ -145,8 +146,10 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         // TODO
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
+        Minecraft.getInstance().gameRenderer.overlayTexture().teardownOverlayColor();
         RenderStage.stage = RenderStage.Stage.NONE;
-        RenderType.cutout().clearRenderState();
+//        RenderType.cutout().clearRenderState();
     }
 
     @Nullable

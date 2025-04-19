@@ -106,6 +106,7 @@ public class BlockRender {
                     }
 
                     RenderType.solid().setupRenderState();
+                    RenderStage.stage = RenderStage.Stage.BLOCK;
 
                     //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
@@ -113,6 +114,7 @@ public class BlockRender {
                     int k = combinedLightIn / 65536;
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
+                    RenderStage.stage = RenderStage.Stage.NONE;
                     RenderType.solid().clearRenderState();
                 }
 
