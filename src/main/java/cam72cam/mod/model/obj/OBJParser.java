@@ -12,11 +12,14 @@ public class OBJParser {
     public static final float UNSPECIFIED = Float.MIN_VALUE;
 
     // 1 object per vertex (x, y, z)
-    private final ArrayList<Vertex.Position> vertices = new ArrayList<>(1024);
+    private final ArrayList<Vertex.Position> vertexPositions = new ArrayList<>(1024);
     // 1 object per normal (x, y, z)
     private final ArrayList<Vertex.Normal> vertexNormals = new ArrayList<>(1024);
-    // 1 object per normal (u, v)
+    // 1 object per uv (u, v)
     private final ArrayList<Vertex.UV> vertexTextures = new ArrayList<>(1024);
+    // 1 entry per vertex for deduplication
+    private final HashMap<String, Integer> vertexMap = new HashMap<>(1024);
+    private final ArrayList<Vertex> vertices = new ArrayList<>();
     // 1 object per face (3 vert and 1 mtl name)
     private final ArrayList<Face> faces = new ArrayList<>(1024);
     // List of material files to load as part of this obj
@@ -53,10 +56,6 @@ public class OBJParser {
                         break;
                     case "usemtl":
                         if (args.length >= 2) {
-//                            String mtlName = args[1];
-//                            for (int i = 2; i < args.length; i++) {
-//                                mtlName += " " + args[i];
-//                            }
                             String mtlName = line.substring(6).trim();
                             setCurrentMTL(mtlName);
                         } else {
@@ -65,10 +64,6 @@ public class OBJParser {
                         break;
                     case "o":
                     case "g":
-//                        String groupName = args[1];
-//                        for (int i = 2; i < args.length; i++) {
-//                            groupName += " " + args[i];
-//                        }
                         String groupName = line.substring(1).trim();
                         addGroup(groupName);
                         break;
@@ -114,10 +109,6 @@ public class OBJParser {
         groups.sort(Comparator.comparing(a -> a.name));
         this.correctedGroups = new ArrayList<>();
 
-//        float[] vertices = this.vertices.array();
-//        float[] vertexNormals = this.vertexNormals.array();
-//        float[] vertexTextures = this.vertexTextures.array();
-//        int[] faceVerts = this.faceVerts.array();
         this.correctedFaceMaterials = new String[faces.size()];
 
         this.buffer = new VertexBuffer(faces.size(), hasNormals);
@@ -137,12 +128,8 @@ public class OBJParser {
                 correctedFaceMaterials[faceCount] = face.materialName;
                 for (int point = 0; point < 3; point++) {
                     int faceVertexIdx = faceIndex + point * 3;
-                    Vertex vertex = face.vertices[point];
+                    Vertex vertex = vertices.get(face.indices[point]);
 
-//                    int vertex = faces[faceVertexIdx+0] * 3;
-//                    float x = vertices[vertex+0];
-//                    float y = vertices[vertex+1];
-//                    float z = vertices[vertex+2];
                     float x = vertex.posX;
                     float y = vertex.posY;
                     float z = vertex.posZ;
@@ -155,24 +142,11 @@ public class OBJParser {
                         usedVerts[faceVertexIdx] = true;
                         points.add(new Vec3d(x, y, z));
                     }
-
-//                    int texture = vertexTextures[faceVertexIdx+1] * 2;
-//                    if (texture >= 0) {
-//                        buffer.data[textureOffset+0] = vertexTextures[texture+0];
-//                        buffer.data[textureOffset+1] = vertexTextures[texture+1];
-//                    } else {
-//                        buffer.data[textureOffset+0] = UNSPECIFIED;
-//                        buffer.data[textureOffset+1] = UNSPECIFIED;
-//                    }
                     buffer.data[textureOffset+0] = vertex.u;
                     buffer.data[textureOffset+1] = vertex.v;
                     textureOffset += buffer.stride;
 
                     if (hasNormals) {
-//                        int normal = faces[faceVertexIdx+2] * 3;
-//                        buffer.data[normalOffset+0] = vertexNormals[normal+0];
-//                        buffer.data[normalOffset+1] = vertexNormals[normal+1];
-//                        buffer.data[normalOffset+2] = vertexNormals[normal+2];
                         buffer.data[normalOffset+0] = vertex.normalX;
                         buffer.data[normalOffset+1] = vertex.normalY;
                         buffer.data[normalOffset+2] = vertex.normalZ;
@@ -246,7 +220,7 @@ public class OBJParser {
     }
 
     private void addVertex(String x, String y, String z) {
-        vertices.add(new Vertex.Position(x, y, z, scale));
+        vertexPositions.add(new Vertex.Position(x, y, z, scale));
     }
     private void addVertexTexture(String u, String v) {
         vertexTextures.add(new Vertex.UV(u, v));
@@ -256,39 +230,42 @@ public class OBJParser {
     }
 
     private void addFace(String a, String b, String c) {
-        String[] points = new String[]{a, b, c};
-        Vertex[] vert = new Vertex[3];
+        String[] strings = new String[]{a, b, c};
+        int[] index = new int[3];
 
         for (int i = 0; i < 3; i++) {
-            String[] sp = points[i].split("/");
-            try{
-                int vertIndex = Integer.parseInt(sp[0]) - 1;
-                Vertex.Position position = vertices.get(vertIndex);
-                vert[i] = switch (sp.length) {
-                    case 3 -> {
-                        Vertex.UV uv = Objects.equals(sp[1], "") ? Vertex.UV.NONE : vertexTextures.get(Integer.parseInt(sp[1]) - 1);
-                        yield new Vertex(position, uv, vertexNormals.get(Integer.parseInt(sp[2]) - 1));
-                    }
-                    case 2 -> {
-                        //No vn
-                        this.hasNormals = false;
-                        yield new Vertex(position, vertexTextures.get(Integer.parseInt(sp[1]) - 1));
-                    }
-                    case 1 -> {
-                        //No uv and vn
-                        this.hasNormals = false;
-                        yield new Vertex(position);
-                    }
-                    default -> throw new IllegalArgumentException("Invalid vertex format: " + points[i]
-                                                                          + ", must have at least a position");
-                };
-            } catch (NumberFormatException e){
-                System.out.println(sp[i]);
-                System.out.println(points[i]);
-                throw new RuntimeException(e);
+            if(vertexMap.containsKey(strings[i])){
+                index[i] = vertexMap.get(strings[i]);
+            } else {
+                vertexMap.put(strings[i], vertices.size());
+                vertices.add(parsePoint(strings[i]));
             }
         }
 
-        faces.add(new Face(vert[0], vert[1], vert[2], currentMaterial));
+        faces.add(new Face(index[0], index[1], index[2], currentMaterial));
+    }
+
+    private Vertex parsePoint(String orig){
+        String[] sp = orig.split("/");
+        int vertIndex = Integer.parseInt(sp[0]) - 1;
+        Vertex.Position position = vertexPositions.get(vertIndex);
+        return switch (sp.length) {
+            case 3 -> {
+                //Obj allow pos//normal and skip uv, need judging specially
+                Vertex.UV uv = Objects.equals(sp[1], "") ? Vertex.UV.NONE : vertexTextures.get(Integer.parseInt(sp[1]) - 1);
+                yield new Vertex(position, uv, vertexNormals.get(Integer.parseInt(sp[2]) - 1));
+            }
+            case 2 -> {
+                //No vn
+                this.hasNormals = false;
+                yield new Vertex(position, vertexTextures.get(Integer.parseInt(sp[1]) - 1));
+            }
+            case 1 -> {
+                //No uv and vn
+                this.hasNormals = false;
+                yield new Vertex(position);
+            }
+            default -> throw new IllegalArgumentException("Invalid vertex format: " + orig + ", must have at least a position");
+        };
     }
 }

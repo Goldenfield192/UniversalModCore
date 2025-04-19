@@ -1,6 +1,9 @@
 package cam72cam.mod.model.obj;
 
 public class VertexBuffer {
+    public boolean useElement;
+    public float[] indices;
+
     public final boolean hasNormals;
     public final int vertsPerFace;
     //(vx, vy, vz, u, v, r, g, b, a, nx, ny, nz)
