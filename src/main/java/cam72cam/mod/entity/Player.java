@@ -1,5 +1,6 @@
 package cam72cam.mod.entity;
 
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
@@ -8,13 +9,15 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.Util;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.server.permission.PermissionAPI;
+import net.minecraftforge.server.permission.nodes.PermissionNode;
+import net.minecraftforge.server.permission.nodes.PermissionTypes;
 
 import static net.minecraft.world.InteractionHand.*;
-import net.minecraftforge.server.permission.DefaultPermissionLevel;
-import net.minecraftforge.server.permission.PermissionAPI;
 
 /** Wrapper around EntityPlayer */
 public class Player extends Entity {
@@ -47,7 +50,7 @@ public class Player extends Entity {
     }
 
     public void setHeldItem(Hand hand, ItemStack stack) {
-        internal.setItemInHand(hand.internal, stack.internal);
+        internal.setItemInHand(hand.internal, stack.internal());
     }
 
     public int getFoodLevel() {
@@ -64,7 +67,7 @@ public class Player extends Entity {
 
     /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.useOn(new UseOnContext(internal, hand.internal, new BlockHitResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
+        return ClickResult.from(getHeldItem(hand).internal().useOn(new UseOnContext(internal, hand.internal, new BlockHitResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
     }
 
     /** What direction the player is trying to move and how fast */
@@ -73,20 +76,21 @@ public class Player extends Entity {
     }
 
     public boolean hasPermission(PermissionAction action) {
-        return PermissionAPI.hasPermission(internal, action.node);
+        // TODO 1.18.2 true is probably overly permissive
+        return internal instanceof ServerPlayer ? PermissionAPI.getPermission((ServerPlayer) internal, action.node) : true;
     }
 
     public static class PermissionAction {
-        private final String node;
+        private final PermissionNode<Boolean> node;
 
-        private PermissionAction(String node) {
-            this.node = node;
+        private PermissionAction(String node, boolean opRequiredDefault) {
+            this.node = new PermissionNode<>("permission", node, PermissionTypes.BOOLEAN, ((player, playerUUID, context) -> !opRequiredDefault || player != null && player.server.getPlayerList().isOp(player.getGameProfile())));
+            CommonEvents.Permissions.NODES.subscribe(event -> event.addNodes(this.node));
         }
     }
 
     public static PermissionAction registerAction(String name, String description, boolean opRequiredDefault) {
-        PermissionAPI.registerNode(name, opRequiredDefault ? DefaultPermissionLevel.OP : DefaultPermissionLevel.ALL, description);
-        return new PermissionAction(name);
+        return new PermissionAction(name, opRequiredDefault);
     }
 
     public enum Hand {

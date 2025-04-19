@@ -103,7 +103,7 @@ public class ClientEvents {
     public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderWorldLastEvent>> OPTIFINE_SUCKS = new Event<>();
+    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -120,12 +120,12 @@ public class ClientEvents {
             }
         }
 
-        private static void onGuiMouse(GuiScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn, event instanceof GuiScreenEvent.MouseScrollEvent ? (int) ((GuiScreenEvent.MouseScrollEvent) event).getScrollDelta() : 0);
+        private static void onGuiMouse(ScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
+            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn, event instanceof ScreenEvent.MouseScrollEvent ? (int) ((ScreenEvent.MouseScrollEvent) event).getScrollDelta() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
-                if (!(event instanceof GuiScreenEvent.MouseScrollEvent)) {
+                if (!(event instanceof ScreenEvent.MouseScrollEvent)) {
                     // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
                     // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
                     skipNextMouseInputEvent = true;
@@ -134,19 +134,19 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onGuiClick(GuiScreenEvent.MouseClickedEvent.Pre event) {
+        public static void onGuiClick(ScreenEvent.MouseClickedEvent.Pre event) {
             onGuiMouse(event, event.getButton(), MouseAction.CLICK);
         }
         @SubscribeEvent
-        public static void onGuiDrag(GuiScreenEvent.MouseDragEvent.Pre event) {
+        public static void onGuiDrag(ScreenEvent.MouseDragEvent.Pre event) {
             onGuiMouse(event, event.getMouseButton(), MouseAction.MOVE);
         }
         @SubscribeEvent
-        public static void onGuiRelease(GuiScreenEvent.MouseReleasedEvent.Pre event) {
+        public static void onGuiRelease(ScreenEvent.MouseReleasedEvent.Pre event) {
             onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
         }
         @SubscribeEvent
-        public static void onGuiScroll(GuiScreenEvent.MouseScrollEvent.Pre event) {
+        public static void onGuiScroll(ScreenEvent.MouseScrollEvent.Pre event) {
             onGuiMouse(event, -1, MouseAction.RELEASE);
         }
 
@@ -239,7 +239,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void optifineSucksEvent(RenderWorldLastEvent event) {
+        public static void optifineSucksEvent(RenderLevelLastEvent event) {
             OPTIFINE_SUCKS.execute(x -> x.accept(event));
         }
 

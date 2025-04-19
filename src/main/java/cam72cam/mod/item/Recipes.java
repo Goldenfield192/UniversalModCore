@@ -46,7 +46,7 @@ public class Recipes extends RecipeProvider {
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
             registry.add(out -> {
-                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
+                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(item.internal().getItem(), item.getCount());
 
                 int height = ingredients.length / width;
 
@@ -73,16 +73,16 @@ public class Recipes extends RecipeProvider {
                     }
                     builder.pattern(line);
                 }
-                ResourceLocation itemName = item.internal.getItem().getRegistryName();
+                ResourceLocation itemName = item.internal().getItem().getRegistryName();
                 ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
 
                 if (!dependencies.isEmpty() || !conflicts.isEmpty()) {
                     ConditionalRecipe.Builder conditions = ConditionalRecipe.builder();
                     for (Fuzzy dependency : dependencies) {
-                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.getName())));
+                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.location())));
                     }
                     for (Fuzzy conflict : conflicts) {
-                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.getName()));
+                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.location()));
                     }
                     conditions.addRecipe(builder::save).build(out, name);
                 } else {

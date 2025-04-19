@@ -231,8 +231,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @see TagSerializer
      */
     @Override
-    public CompoundTag save(CompoundTag compound) {
-        super.save(compound);
+    public void saveAdditional(CompoundTag compound) {
+        super.saveAdditional(compound);
 
         TagCompound data = new TagCompound(compound);
 
@@ -247,13 +247,12 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             }
             data.set("instanceData", instanceData);
         }
-        return compound;
     }
 
     /** Active Synchronization from markDirty */
     @Override
     public final ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return new ClientboundBlockEntityDataPacket(this.worldPosition, 1, getUpdateTag(true));
+        return ClientboundBlockEntityDataPacket.create(this, e -> getUpdateTag(true));
     }
 
     /** Active Synchronization from markDirty */
@@ -264,7 +263,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public final CompoundTag getUpdateTag(boolean writeUpdate) {
         CompoundTag tag = super.getUpdateTag();
         if (this.isLoaded()) {
-            this.save(tag);
+            this.saveAdditional(tag);
             TagCompound umcUpdate = new TagCompound();
             if (writeUpdate) {
                 try {
@@ -411,19 +410,19 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 @Nonnull
                 @Override
                 public ItemStack getStackInSlot(int slot) {
-                    return target.get(slot).internal;
+                    return target.get(slot).internal();
                 }
 
                 @Nonnull
                 @Override
                 public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-                    return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal;
+                    return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal();
                 }
 
                 @Nonnull
                 @Override
                 public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                    return target.extract(slot, amount, simulate).internal;
+                    return target.extract(slot, amount, simulate).internal();
                 }
 
                 @Override

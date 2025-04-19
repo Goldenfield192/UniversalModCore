@@ -30,7 +30,7 @@ public class StandardModel {
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
-        Block block = Block.byItem(stack.internal.getItem());
+        Block block = Block.byItem(stack.internal().getItem());
         BlockState gravelState = block.defaultBlockState();//.getStateFromMeta(stack.internal.getMetadata());
         if (block instanceof RotatedPillarBlock) {
             gravelState = gravelState.setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
@@ -42,7 +42,7 @@ public class StandardModel {
     public StandardModel addColorBlock(Color color, Matrix4 transform) {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
-                .map(x -> Block.byItem(x.internal.getItem()))
+                .map(x -> Block.byItem(x.internal().getItem()))
                 .filter(x -> x.defaultMaterialColor() == color.internal.getMaterialColor())
                 .map(Block::defaultBlockState)
                 .findFirst().get();

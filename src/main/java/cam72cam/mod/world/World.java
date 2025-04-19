@@ -53,6 +53,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /** Wraps both ClientLevel and ServerLevel */
 public class World {
@@ -460,17 +461,18 @@ public class World {
 
     /** If it is is raining */
     public boolean isRaining(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.Precipitation.RAIN;
+        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitation() == Biome.Precipitation.RAIN;
     }
 
     /** If it is snowing */
     public boolean isSnowing(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.Precipitation.SNOW;
+        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitation() == Biome.Precipitation.SNOW;
     }
 
     /** Temp in celsius */
     public float getTemperature(Vec3i pos) {
-        float mctemp = internal.getBiome(pos.internal()).getTemperature(pos.internal());
+        // TODO 1.18.2 float mctemp = internal.getBiome(pos.internal()).value().getTemperature(pos.internal());
+        float mctemp = internal.getBiome(pos.internal()).value().getBaseTemperature();
         //https://www.reddit.com/r/Minecraft/comments/3eh7yu/the_rl_temperature_of_minecraft_biomes_revealed/ctex050/
         return (13.6484805403f * mctemp) + 7.0879687222f;
     }
@@ -482,7 +484,7 @@ public class World {
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.addFreshEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal));
+        internal.addFreshEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal()));
     }
 
     /** Check if the block is currently in a loaded chunk */
@@ -499,7 +501,7 @@ public class World {
     }
 
     public List<Vec3i> blocksInBounds(IBoundingBox bb) {
-        return internal.getBlockCollisions(null, BoundingBox.from(bb))
+        return StreamSupport.stream(internal.getBlockCollisions(null, BoundingBox.from(bb)).spliterator(), false)
                 .map(VoxelShape::bounds)
                 .filter(blockBox -> bb.intersects(IBoundingBox.from(blockBox)))
                 .map(blockBox -> new Vec3i(blockBox.minX, blockBox.minY, blockBox.minZ))
@@ -528,7 +530,7 @@ public class World {
 
     /** Set a block to given stack (best guestimate) */
     public void setBlock(Vec3i pos, ItemStack stack) {
-        Block state = Block.byItem(stack.internal.getItem()); //TODO 1.14.4 .getStateFromMeta(stack.internal.getMetadata());
+        Block state = Block.byItem(stack.internal().getItem()); //TODO 1.14.4 .getStateFromMeta(stack.internal.getMetadata());
         internal.setBlockAndUpdate(pos.internal(), state.defaultBlockState());
     }
 

@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Locale;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraftforge.data.loading.DatagenModLoader;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
@@ -18,9 +21,6 @@ import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraftforge.fmllegacy.DatagenModLoader;
-import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
-import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import java.util.*;
 
@@ -141,7 +141,7 @@ public class ModCore {
     }
 
 	@SubscribeEvent
-    public void serverStarting(FMLServerStartingEvent event) {
+    public void serverStarting(ServerStartingEvent event) {
 		// Formerly for command registration
     }
 
@@ -160,7 +160,7 @@ public class ModCore {
 
     /** START Phase (Forge) */
     @SubscribeEvent
-    public void serverStarted(FMLServerStartedEvent event) {
+    public void serverStarted(ServerStartedEvent event) {
         proxy.event(ModEvent.START);
     }
 

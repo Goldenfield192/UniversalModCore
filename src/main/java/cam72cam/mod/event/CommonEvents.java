@@ -18,6 +18,8 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.server.permission.PermissionAPI;
+import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
 
@@ -60,6 +62,10 @@ public class CommonEvents {
     }
 
     public static final Event<Consumer<IForgeRegistry<MenuType<?>>>> CONTAINER_REGISTRY = new Event<>();
+
+    public static final class Permissions {
+        public static final Event<Consumer<PermissionGatherEvent.Nodes>> NODES = new Event<>();
+    }
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static final class EventBusForge {
@@ -111,6 +117,12 @@ public class CommonEvents {
             if (!Block.BROKEN.executeCancellable(x -> x.onBroken((Level)event.getWorld(), event.getPos(), event.getPlayer()))) {
                 event.setCanceled(true);
             }
+        }
+
+
+        @SubscribeEvent
+        public static void registerContainers(PermissionGatherEvent.Nodes event) {
+            Permissions.NODES.execute(x -> x.accept(event));
         }
 
     }

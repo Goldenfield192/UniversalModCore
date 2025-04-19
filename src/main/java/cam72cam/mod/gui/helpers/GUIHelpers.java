@@ -143,7 +143,7 @@ public class GUIHelpers {
                 .rescale_normal(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
+            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal(), x, y);
         }
     }
 }

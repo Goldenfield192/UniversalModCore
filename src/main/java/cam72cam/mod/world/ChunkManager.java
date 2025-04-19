@@ -30,11 +30,11 @@ public class ChunkManager {
 
         ChunkPos chunkpos = new ChunkPos(inPos.internal());
         ServerLevel server = (ServerLevel) world.internal;
-        server.getChunkSource().registerTickingTicket(UMCTICKET, chunkpos, 3, chunkpos);
+        server.getChunkSource().addRegionTicket(UMCTICKET, chunkpos, 3, chunkpos, true);
     }
 
     private static Path chunkData(ServerLevel world) {
-        File dir = new File(world.getServer().storageSource.getDimensionPath(world.dimension()), "umc");
+        File dir = new File(world.getServer().storageSource.getDimensionPath(world.dimension()).toString(), "umc");
         dir.mkdirs();
         return new File(dir, "chunks.raw").toPath();
     }
@@ -66,7 +66,7 @@ public class ChunkManager {
                         for (String line : Files.readAllLines(dataFile)) {
                             ChunkPos chunkpos = new ChunkPos(Long.parseLong(line));
                             ModCore.debug("Remembered to keep chunk %s loaded", chunkpos);
-                            server.getChunkSource().registerTickingTicket(UMCTICKET, chunkpos, 3, chunkpos);
+                            server.getChunkSource().addRegionTicket(UMCTICKET, chunkpos, 3, chunkpos, true);
                         }
                     }
                 } catch (IOException e) {
