@@ -1,21 +1,23 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.model.common.ElementBufferGenerator;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.RenderStage;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,7 @@ public class VBO {
         ClientEvents.TICK.subscribe(() -> {
             synchronized (vbos) {
                 for (VBO vbo : vbos) {
-                    if (vbo.vbo != -1 && System.currentTimeMillis() - vbo.lastUsed > 30 * 1000) {
+                    if ((vbo.vbo != -1 || vbo.ebo != -1) && System.currentTimeMillis() - vbo.lastUsed > 30 * 1000) {
                         vbo.free();
                     }
                 }
@@ -43,6 +45,7 @@ public class VBO {
 
     private int vao;
     private int vbo;
+    private int ebo;
     private int length;
     private long lastUsed;
     private VertexBuffer vbInfo;
@@ -56,12 +59,13 @@ public class VBO {
                 thread.setPriority(Thread.MIN_PRIORITY);
                 return thread;
             });
-    private Future<FloatBuffer> loader = null;
+    private Future<Pair<FloatBuffer, IntBuffer>> loader = null;
 
     public VBO(Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
         this.buffer = buffer;
         this.vao = -1;
         this.vbo = -1;
+        this.ebo = -1;
         this.settings = settings;
 
         synchronized (vbos) {
@@ -75,15 +79,22 @@ public class VBO {
                 try {
                     int oldVao = GL32.glGetInteger(GL32.GL_VERTEX_ARRAY_BUFFER_BINDING);// TODO this should be GL32
                     int oldVbo = GL32.glGetInteger(GL32.GL_ARRAY_BUFFER_BINDING);
+                    int oldEbo = GL32.glGetInteger(GL32.GL_ELEMENT_ARRAY_BUFFER_BINDING);
 
                     vao = GL32.glGenVertexArrays();
                     GL32.glBindVertexArray(vao);
+
                     vbo = GL32.glGenBuffers();
                     GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
-                    GL32.glBufferData(GL32.GL_ARRAY_BUFFER, loader.get(), GL32.GL_STATIC_DRAW);
+                    GL32.glBufferData(GL32.GL_ARRAY_BUFFER, loader.get().getKey(), GL32.GL_STATIC_DRAW);
+
+                    ebo = GL32.glGenBuffers();
+                    GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, ebo);
+                    GL32.glBufferData(GL32.GL_ELEMENT_ARRAY_BUFFER, loader.get().getValue(), GL32.GL_STATIC_DRAW);
 
                     GL32.glBindVertexArray(oldVao);
                     GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
+                    GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, oldEbo);
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
@@ -93,12 +104,18 @@ public class VBO {
             // Start thread
             loader = pool.submit(() -> {
                 VertexBuffer vb = buffer.get();
-                this.length = vb.data.length / (vb.stride);
+                if(!vb.hasEbo){
+                    ElementBufferGenerator.genEBO(vb);
+                }
+                this.length = vb.ebo.length;
                 this.vbInfo = new VertexBuffer(0, vb.hasNormals);
-                FloatBuffer buffer = BufferUtils.createFloatBuffer(vb.data.length);
-                buffer.put(vb.data);
+                FloatBuffer buffer = BufferUtils.createFloatBuffer(vb.vbo.length);
+                buffer.put(vb.vbo);
                 buffer.position(0);
-                return buffer;
+                IntBuffer ebo = BufferUtils.createIntBuffer(vb.ebo.length);
+                ebo.put(vb.ebo);
+                ebo.position(0);
+                return Pair.of(buffer, ebo);
             });
         }
     }
@@ -116,7 +133,7 @@ public class VBO {
         private final RenderState state;
 
         public boolean isLoaded() {
-            return vbo != -1;
+            return (vbo != -1 && ebo != -1);
         }
 
 
@@ -163,10 +180,17 @@ public class VBO {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
 
-            ShaderInstance shader = GameRenderer.getRendertypeCutoutShader();
+            if(RenderStage.stage == RenderStage.Stage.ENTITY){
+                RenderType.entityCutoutNoCull(((CustomTexture)state.texture).textureLocation.internal).setupRenderState();
+            }
+
+            ShaderInstance shader = RenderStage.stage == RenderStage.Stage.ENTITY
+                                    ? GameRenderer.getRendertypeItemEntityTranslucentCullShader()
+                                    : GameRenderer.getRendertypeCutoutShader();
             RenderSystem.setShader(() -> shader);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
+            GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, ebo);
 
             int stride = vbInfo.stride * Float.BYTES;
 
@@ -218,6 +242,10 @@ public class VBO {
                 RenderContext.checkError();
                 shader.getVertexFormat().clearBufferState();
 
+                if(RenderStage.stage == RenderStage.Stage.ENTITY){
+                    RenderType.entityCutoutNoCull(((CustomTexture)state.texture).textureLocation.internal).clearRenderState();
+                }
+
                 RenderContext.checkError();
 
                 //GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
@@ -249,7 +277,7 @@ public class VBO {
             if (!isLoaded()) {
                 return;
             }
-            GL32.glDrawArrays(GL32.GL_TRIANGLES, 0, length);
+            GL32.glDrawElements(GL32.GL_TRIANGLES,  length, GL32.GL_UNSIGNED_INT, 0L);
             RenderContext.checkError();
         }
     }
@@ -259,10 +287,12 @@ public class VBO {
      */
     public void free() {
         synchronized (vbos) {
-            if (vbo != -1) {
+            if (vbo != -1 || ebo != -1) {
                 GL32.glDeleteBuffers(vbo);
+                GL32.glDeleteBuffers(ebo);
                 GL32.glDeleteVertexArrays(vao);
                 vbo = -1;
+                ebo = -1;
             }
         }
     }

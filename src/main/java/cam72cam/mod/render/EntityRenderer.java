@@ -6,10 +6,9 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.opengl.RenderState;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.resources.ResourceLocation;
@@ -125,16 +124,19 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     }*/
 
     @Override
-    public void render(T stock, float entityYaw, float partialTicks, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
-        Entity self = stock.getSelf();
+    public void render(T entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int i) {
+        Entity self = entity.getSelf();
 
-        RenderType.cutout().setupRenderState();
+        RenderStage.stage = RenderStage.Stage.ENTITY;
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+        Minecraft.getInstance().gameRenderer.lightTexture().updateLightTexture(i);
+        Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
         //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
         int j = i % 65536;
         int k = i / 65536;
-        RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
+        RenderState state = new RenderState(poseStack).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
@@ -144,7 +146,10 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         // TODO
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
-        RenderType.cutout().clearRenderState();
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
+        Minecraft.getInstance().gameRenderer.overlayTexture().teardownOverlayColor();
+        RenderStage.stage = RenderStage.Stage.NONE;
+//        RenderType.cutout().clearRenderState();
     }
 
     @Nullable

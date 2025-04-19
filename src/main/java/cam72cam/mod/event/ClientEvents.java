@@ -2,23 +2,21 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.RenderStage;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -44,6 +42,7 @@ public class ClientEvents {
         GuiRegistry.registerClientEvents();
         World.registerClientEvnets();
         CommonEvents.Entity.REGISTER.post(() -> REGISTER_ENTITY.execute(Runnable::run));
+        REGISTER_BLOCK_RENDER_LAYER.execute(Runnable::run);
 
         VBO.registerClientEvents();
         CustomTexture.registerClientEvents();
@@ -98,6 +97,7 @@ public class ClientEvents {
     public static final Event<Consumer<TextureStitchEvent.Pre>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
+    public static final Event<Runnable> REGISTER_BLOCK_RENDER_LAYER = new Event<>();
     public static final Event<Consumer<RenderGameOverlayEvent.Text>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGameOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
@@ -220,7 +220,9 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onOverlayEvent(RenderGameOverlayEvent.Pre event) {
+            RenderStage.stage = RenderStage.Stage.GUI;
             RENDER_OVERLAY.execute(x -> x.accept(event));
+            RenderStage.stage = RenderStage.Stage.NONE;
         }
 
         @SubscribeEvent

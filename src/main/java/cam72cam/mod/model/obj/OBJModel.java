@@ -3,13 +3,14 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.obj.OBJRender;
+import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.serialization.*;
+import cam72cam.mod.serialization.ResourceCache;
 import cam72cam.mod.serialization.ResourceCache.GenericByteBuffer;
+import cam72cam.mod.serialization.TagCompound;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -126,15 +127,16 @@ public class OBJModel {
                             ModCore.catching(e);
                         }
                     }
-                    return new GenericByteBuffer(toRGBA(img));
+                    return new GenericByteBuffer(toBGRA(img));
                 });
                 lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
 
                 for (Integer lodValue : lodValues) {
                     if (lodValue < texSize) {
                         Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
-                        Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.rgba", lodValue),
-                                builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
+                        Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.bgra", lodValue),
+                                builder -> new GenericByteBuffer(
+                                        toBGRA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
                         );
                         lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds));
                     }
@@ -143,7 +145,8 @@ public class OBJModel {
 
                 if (hasNormals) {
                     try {
-                        Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
+                        Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(
+                                toBGRA(builder.getNormals().get(variant).get())));
                         this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
                     } catch (Exception ex) {
                         ModCore.warn("Unable to load normal map for %s, %s", modelLoc, ex);
@@ -152,7 +155,8 @@ public class OBJModel {
 
                 if (hasSpeculars) {
                     try {
-                    Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(toRGBA(builder.getSpeculars().get(variant).get())));
+                    Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(
+                            toBGRA(builder.getSpeculars().get(variant).get())));
                     this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
                     } catch (Exception ex) {
                         ModCore.warn("Unable to load specular map for %s, %s", modelLoc, ex);
