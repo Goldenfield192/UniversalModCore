@@ -115,21 +115,6 @@ public abstract class CustomTexture implements Texture {
         textureLocation = new Identifier(ModCore.MODID, "tex" + glID);
 
         MANAGER.register(textureLocation.internal, abstractTexture);
-//        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(glID)))) {
-//            GL32.glPixelStorei(GL32.GL_UNPACK_SWAP_BYTES, GL32.GL_FALSE);
-//            GL32.glPixelStorei(GL32.GL_UNPACK_LSB_FIRST, GL32.GL_FALSE);
-//            GL32.glPixelStorei(GL32.GL_UNPACK_ROW_LENGTH, 0);
-//            GL32.glPixelStorei(GL32.GL_UNPACK_SKIP_ROWS, 0);
-//            GL32.glPixelStorei(GL32.GL_UNPACK_SKIP_PIXELS, 0);
-//            GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 4);
-//
-//            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MIN_FILTER, GL32.GL_NEAREST);
-//            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MAG_FILTER, GL32.GL_NEAREST);
-//            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_EDGE);
-//            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_EDGE);
-//
-//            GL32.glTexImage2D(GL32.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL32.GL_RGBA, GL32.GL_UNSIGNED_BYTE, buffer);
-//        }
     }
 
     private void threadedLoader() {

@@ -71,7 +71,7 @@ public class StandardModel {
 
     /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Matrix4 transform) {
-        BakedModel model = Minecraft.getInstance().getItemRenderer().getModel(stack.internal, null, null, 15728880);
+        BakedModel model = Minecraft.getInstance().getItemRenderer().getModel(stack.internal(), null, null, 15728880);
 
         models.add(Pair.of(itemToBlockState(stack), new BakedScaledModel(model, transform)));
 //        custom.add((matrix, pt) -> {

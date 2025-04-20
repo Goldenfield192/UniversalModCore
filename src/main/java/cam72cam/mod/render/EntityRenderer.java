@@ -129,7 +129,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         RenderStage.stage = RenderStage.Stage.ENTITY;
         Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-        Minecraft.getInstance().gameRenderer.lightTexture().updateLightTexture(i);
+//        Minecraft.getInstance().gameRenderer.lightTexture().updateLightTexture(i);
         Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
         //TODO bork 1.17.1? RenderHelper.turnBackOn();

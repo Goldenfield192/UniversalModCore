@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.lwjgl.opengl.GL32;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,8 @@ public class DirectDraw {
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
         ShaderInstance shader = RenderSystem.getShader();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthFunc(GL32.GL_LEQUAL);
         try (With ctx = RenderContext.apply(state)) {
             builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
             for (VertexBuilder vert : verts) {
@@ -26,6 +29,7 @@ public class DirectDraw {
             BufferUploader.end(builder);
         }
         RenderSystem.setShader(() -> shader);
+        RenderSystem.disableDepthTest();
     }
 
     public VertexBuilder vertex(double x, double y, double z) {

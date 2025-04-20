@@ -20,7 +20,7 @@ public class Config {
     public static boolean DebugLogging = false;
 
     @ConfigFile.Comment("Write texture sheets to PNGs in cache directory")
-    public static boolean DebugTextureSheets = false;
+    public static boolean DebugTextureSheets = true;
 
     @ConfigFile.Comment("Enable threaded texture loading")
     public static boolean ThreadedTextureLoading = true;

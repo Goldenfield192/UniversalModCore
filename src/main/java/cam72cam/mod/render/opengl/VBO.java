@@ -9,6 +9,8 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.math.Vector3f;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -180,14 +182,19 @@ public class VBO {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
 
-            if(RenderStage.stage == RenderStage.Stage.ENTITY){
-                RenderType.entityCutoutNoCull(((CustomTexture)state.texture).textureLocation.internal).setupRenderState();
-            }
-
+            Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+            Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
             ShaderInstance shader = RenderStage.stage == RenderStage.Stage.ENTITY
                                     ? GameRenderer.getRendertypeItemEntityTranslucentCullShader()
-                                    : GameRenderer.getRendertypeCutoutShader();
+                                    : GameRenderer.getRendertypeItemEntityTranslucentCullShader();
+            RenderSystem.setupShaderLights(shader);
             RenderSystem.setShader(() -> shader);
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthFunc(GL32.GL_LEQUAL);
+//            RenderSystem.enableBlend();
+            RenderSystem.disableCull();
+//            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+//                                           GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
             GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -206,7 +213,7 @@ public class VBO {
                     case NORMAL -> {
                         if (vbInfo.hasNormals) {
                             GL32.glEnableVertexAttribArray(i);
-                            GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, true, stride, (long) vbInfo.normalOffset * Float.BYTES);
+                            GL32.glVertexAttribPointer(i, 3, GL32.GL_BYTE, false, stride, (long) vbInfo.normalOffset * Float.BYTES);
                         }
                     }
                     case COLOR -> {
@@ -219,9 +226,11 @@ public class VBO {
                                 if (entry.getKey().equals("UV0")) {
                                     GL32.glEnableVertexAttribArray(i);
                                     GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.textureOffset * Float.BYTES);
+//                                    GL32.glDisableVertexAttribArray(i);
                                 } else if (entry.getKey().equals("UV1")) {
                                     // TODO
                                 } else if (entry.getKey().equals("UV2")) {
+//                                    GL32.glEnableVertexAttribArray(i);
                                     GL32.glDisableVertexAttribArray(i);
                                     int x = 255;
                                     int y = 255;
@@ -230,6 +239,7 @@ public class VBO {
                                         y = (int) (state.lightmap[1] * 255);
                                     }
                                     GL32.glVertexAttribI2i(i, x, y);
+//                                    GL32.glDisableVertexAttribArray(i);
                                 }
                             }
                         }
@@ -242,15 +252,16 @@ public class VBO {
                 RenderContext.checkError();
                 shader.getVertexFormat().clearBufferState();
 
-                if(RenderStage.stage == RenderStage.Stage.ENTITY){
-                    RenderType.entityCutoutNoCull(((CustomTexture)state.texture).textureLocation.internal).clearRenderState();
-                }
-
                 RenderContext.checkError();
 
                 //GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
                 //GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, 0);
                 //GL32.glBindVertexArray(oldVao);
+                RenderSystem.disableDepthTest();
+//                RenderSystem.disableBlend();
+                RenderSystem.enableCull();
+                Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
+                Minecraft.getInstance().gameRenderer.overlayTexture().teardownOverlayColor();
                 RenderSystem.setShader(() -> oldShader);
                 BufferUploader.reset();
             });
