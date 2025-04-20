@@ -3,7 +3,6 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.common.ElementBufferGenerator;
 import cam72cam.mod.model.obj.VertexBuffer;
-import cam72cam.mod.render.RenderStage;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -12,7 +11,6 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
@@ -184,10 +182,7 @@ public class VBO {
 
             Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
             Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
-            ShaderInstance shader = RenderStage.stage == RenderStage.Stage.ENTITY
-                                    ? GameRenderer.getRendertypeItemEntityTranslucentCullShader()
-                                    : GameRenderer.getRendertypeItemEntityTranslucentCullShader();
-            RenderSystem.setupShaderLights(shader);
+            ShaderInstance shader = GameRenderer.getRendertypeItemEntityTranslucentCullShader();
             RenderSystem.setShader(() -> shader);
             RenderSystem.enableDepthTest();
             RenderSystem.depthFunc(GL32.GL_LEQUAL);

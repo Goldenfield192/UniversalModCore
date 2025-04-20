@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
@@ -113,6 +114,9 @@ public class RenderContext {
             GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
             restore.add(() -> GL11.glShadeModel(oldShading));
         }*/
+
+        RenderSystem.setShaderLights(new Vector3f(0, 0, 1), new Vector3f(1, 0, 0));
+        RenderSystem.setupShaderLights(shader);
 
         if (state.blend != null) {
             state.blend.apply();

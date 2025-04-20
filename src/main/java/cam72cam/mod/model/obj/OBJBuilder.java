@@ -142,7 +142,6 @@ public class OBJBuilder {
         this.textureWidth = packer.getWidth();
         this.textureHeight = packer.getHeight();
 
-        ElementBufferGenerator.genEBO(vbo);
         ModCore.debug("Building %s took %sms", modelLoc, (System.currentTimeMillis() - start));
     }
 

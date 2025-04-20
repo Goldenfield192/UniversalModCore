@@ -15,7 +15,7 @@ public class ElementBufferGenerator {
                 origVertex.add(new Vertex(data[i], data[i+1], data[i+2])
                                        .uv(data[i+3], data[i+4])
                                        .color(data[i+5], data[i+6], data[i+7], data[i+8])
-                                       .normal(data[i+9], data[i+10], data[i+11]));
+                                       .normal(data[i+11], data[i+10], data[i+9]));
             }
         } else {
             for (int i = 0; i < buffer.data.length; i += buffer.stride) {
