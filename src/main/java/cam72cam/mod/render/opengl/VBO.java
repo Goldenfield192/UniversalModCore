@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
@@ -182,7 +183,15 @@ public class VBO {
 
             Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
             Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
-            ShaderInstance shader = GameRenderer.getRendertypeItemEntityTranslucentCullShader();
+            Runnable runnable;
+            if(state.texture instanceof CustomTexture){
+                RenderType type = RenderType.itemEntityTranslucentCull(((CustomTexture) state.texture).textureLocation.internal);
+                type.setupRenderState();
+                runnable = type::clearRenderState;
+            } else {
+                 runnable = ()->{};
+            }
+            ShaderInstance shader = RenderSystem.getShader();
             RenderSystem.setShader(() -> shader);
             RenderSystem.enableDepthTest();
             RenderSystem.depthFunc(GL32.GL_LEQUAL);
@@ -254,6 +263,7 @@ public class VBO {
                 //GL32.glBindVertexArray(oldVao);
                 RenderSystem.disableDepthTest();
 //                RenderSystem.disableBlend();
+                runnable.run();
                 RenderSystem.enableCull();
                 Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
                 Minecraft.getInstance().gameRenderer.overlayTexture().teardownOverlayColor();

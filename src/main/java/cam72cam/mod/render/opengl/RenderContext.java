@@ -5,6 +5,7 @@ import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
+import net.minecraft.Util;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
@@ -16,6 +17,11 @@ import java.util.List;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    private static final Vector3f DIFFUSE_LIGHT_0 = (Vector3f) Util.make(new Vector3f(0.2F, 1.0F, -0.7F), Vector3f::normalize);
+    private static final Vector3f DIFFUSE_LIGHT_1 = (Vector3f)Util.make(new Vector3f(-0.2F, 1.0F, 0.7F), Vector3f::normalize);
+    private static final Vector3f NETHER_DIFFUSE_LIGHT_0 = (Vector3f)Util.make(new Vector3f(0.2F, 1.0F, -0.7F), Vector3f::normalize);
+    private static final Vector3f NETHER_DIFFUSE_LIGHT_1 = (Vector3f)Util.make(new Vector3f(-0.2F, -1.0F, 0.7F), Vector3f::normalize);
+
     private RenderContext() {
     }
 
@@ -115,7 +121,7 @@ public class RenderContext {
             restore.add(() -> GL11.glShadeModel(oldShading));
         }*/
 
-        RenderSystem.setShaderLights(new Vector3f(0, 0, 1), new Vector3f(1, 0, 0));
+        RenderSystem.setShaderLights(DIFFUSE_LIGHT_0, DIFFUSE_LIGHT_1);
         RenderSystem.setupShaderLights(shader);
 
         if (state.blend != null) {
