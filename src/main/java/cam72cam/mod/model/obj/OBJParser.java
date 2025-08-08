@@ -1,7 +1,7 @@
 package cam72cam.mod.model.obj;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.model.obj.Buffers.*;
+import cam72cam.mod.model.maths.Buffers.*;
 
 import java.io.*;
 import java.util.*;
@@ -260,7 +260,7 @@ public class OBJParser {
     private void parsePoint(String point) {
         String[] sp = point.split("/");
         for (int i = 0; i < 3; i++) {
-            if (i < sp.length && !sp[i].equals("")) {
+            if (i < sp.length && !sp[i].isEmpty()) {
                 faceVerts.add(Integer.parseInt(sp[i]) - 1);
             } else {
                 faceVerts.add(-1);

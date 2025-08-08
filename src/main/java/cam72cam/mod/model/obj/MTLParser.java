@@ -1,5 +1,7 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.model.common.Material;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +27,7 @@ public class MTLParser {
                 if (line.startsWith("#")) {
                     continue;
                 }
-                if (line.length() == 0) {
+                if (line.isEmpty()) {
                     continue;
                 }
                 String[] parts = line.split(" ");

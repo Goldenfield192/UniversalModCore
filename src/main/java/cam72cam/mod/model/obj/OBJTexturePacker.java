@@ -2,12 +2,12 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.model.common.ImageUtils;
+import cam72cam.mod.model.common.Material;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static cam72cam.mod.model.obj.ImageUtils.scaleImage;
+import static cam72cam.mod.model.common.ImageUtils.scaleImage;
 
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class OBJTexturePacker {
@@ -79,13 +79,13 @@ public class OBJTexturePacker {
 
             if (materials.get(0).hasTexture()) {
                 try {
-                    BufferedImage image = getCachedImage(materials.get(0).texKd, null);
+                    BufferedImage image = getCachedImage(materials.get(0).texture, null);
                     size = new Dimension(image.getWidth(), image.getHeight());
                     this.width = materials.stream().mapToInt(x -> x.copiesU).max().getAsInt() * size.width;
                     this.height = materials.stream().mapToInt(x -> x.copiesV).max().getAsInt() * size.height;
                     this.texture = materials.get(0);
                 } catch (Exception e) {
-                    ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texKd));
+                    ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texture));
                 }
             }
         }
@@ -184,10 +184,10 @@ public class OBJTexturePacker {
                 image = getCachedImage(origPath, variant);
             } else {
                 Material mat = materials.get(0);
-                int r = (int) (Math.max(0, mat.KdR) * 255);
-                int g = (int) (Math.max(0, mat.KdG) * 255);
-                int b = (int) (Math.max(0, mat.KdB) * 255);
-                int a = (int) (mat.KdA * 255);
+                int r = (int) (Math.max(0, mat.colorR) * 255);
+                int g = (int) (Math.max(0, mat.colorG) * 255);
+                int b = (int) (Math.max(0, mat.colorB) * 255);
+                int a = (int) (mat.colorA * 255);
                 int cint = (a << 24) | (r << 16) | (g << 8) | b;
                 image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
                 for (int px = 0; px < this.width; px++) {
@@ -260,11 +260,11 @@ public class OBJTexturePacker {
         this.lookup = lookup;
 
         List<Node> inputNodes = materials.stream()
-                .filter(m -> m.used)
-                .collect(Collectors.groupingBy(k -> k.texKd == null ? k.name : k.texKd)).values().stream()
-                .map(Node::new)
-                .sorted(Comparator.comparingInt(x -> -10000 * x.height + x.width))
-                .collect(Collectors.toList());
+                                         .filter(m -> m.used)
+                                         .collect(Collectors.groupingBy(k -> k.texture == null ? k.name : k.texture)).values().stream()
+                                         .map(Node::new)
+                                         .sorted(Comparator.comparingInt(x -> -10000 * x.height + x.width))
+                                         .collect(Collectors.toList());
 
         Node rootNode = inputNodes.remove(0);
         for (Node node : inputNodes) {
@@ -301,7 +301,7 @@ public class OBJTexturePacker {
             textures.put(variant, () -> {
                 BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D graphics = image.createGraphics();
-                rootNode.draw(0, 0, variant, graphics, m -> m.texKd);
+                rootNode.draw(0, 0, variant, graphics, m -> m.texture);
                 if (needsScaling()) {
                     int originalWidth = image.getWidth();
                     int originalHeight = image.getHeight();
@@ -311,11 +311,11 @@ public class OBJTexturePacker {
                 return image;
             });
 
-            if (materials.stream().anyMatch(x -> x.texBump != null)) {
+            if (materials.stream().anyMatch(x -> x.normal != null)) {
                 normals.put(variant, () -> {
                     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
                     Graphics2D graphics = image.createGraphics();
-                    rootNode.draw(0, 0, variant, graphics, m -> m.texBump);
+                    rootNode.draw(0, 0, variant, graphics, m -> m.normal);
                     if (needsScaling()) {
                         int originalWidth = image.getWidth();
                         int originalHeight = image.getHeight();
@@ -326,11 +326,11 @@ public class OBJTexturePacker {
                 });
             }
 
-            if (materials.stream().anyMatch(x -> x.texNs != null)) {
+            if (materials.stream().anyMatch(x -> x.specular != null)) {
                 speculars.put(variant, () -> {
                     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
                     Graphics2D graphics = image.createGraphics();
-                    rootNode.draw(0, 0, variant, graphics, m -> m.texNs);
+                    rootNode.draw(0, 0, variant, graphics, m -> m.specular);
                     if (needsScaling()) {
                         int originalWidth = image.getWidth();
                         int originalHeight = image.getHeight();

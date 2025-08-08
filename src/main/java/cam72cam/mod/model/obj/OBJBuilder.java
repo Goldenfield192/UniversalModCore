@@ -2,6 +2,7 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.model.common.Material;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 
@@ -19,7 +20,7 @@ public class OBJBuilder {
     private final OBJTexturePacker packer;
     private final int textureWidth;
     private final int textureHeight;
-    private boolean smoothShading;
+    private final boolean smoothShading;
 
     public OBJBuilder(Identifier modelLoc, ResourceCache.ResourceProvider input, float scale, float darken, Collection<String> variants) throws IOException {
         long start = System.currentTimeMillis();
@@ -70,10 +71,10 @@ public class OBJBuilder {
                 for (int point = 0; point < 3; point++) {
                     int pointOffset = point * vbo.stride;
 
-                    vbo.data[colorOffset + pointOffset + 0] = material.hasTexture() ? material.KdR * mult : 1;
-                    vbo.data[colorOffset + pointOffset + 1] = material.hasTexture() ? material.KdG * mult : 1;
-                    vbo.data[colorOffset + pointOffset + 2] = material.hasTexture() ? material.KdB * mult : 1;
-                    vbo.data[colorOffset + pointOffset + 3] = material.KdA;
+                    vbo.data[colorOffset + pointOffset + 0] = material.hasTexture() ? material.colorR * mult : 1;
+                    vbo.data[colorOffset + pointOffset + 1] = material.hasTexture() ? material.colorG * mult : 1;
+                    vbo.data[colorOffset + pointOffset + 2] = material.hasTexture() ? material.colorB * mult : 1;
+                    vbo.data[colorOffset + pointOffset + 3] = material.colorA;
 
                     float u = vbo.data[textureOffset + pointOffset + 0];
                     float v = vbo.data[textureOffset + pointOffset + 1];
