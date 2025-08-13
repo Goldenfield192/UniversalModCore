@@ -1,8 +1,10 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.util.With;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.texture.TextureManager;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
@@ -86,6 +88,7 @@ public class RenderContext {
         if (state.texture != null) {
             GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
             boolean oldTexEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+            CustomTexture texture =
 
             if (state.texture == NO_TEXTURE) {
                 applyBool(GL11.GL_TEXTURE_2D, false);
@@ -95,6 +98,8 @@ public class RenderContext {
                 });
             } else {
                 applyBool(GL11.GL_TEXTURE_2D, true);
+                TextureManager manager = Minecraft.getMinecraft().getTextureManager();
+                manager.bindTexture(state.texture.);
 
                 int oldTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());

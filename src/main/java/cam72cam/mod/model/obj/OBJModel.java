@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import static cam72cam.mod.model.obj.ImageUtils.*;
 
 public class OBJModel {
-    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
+    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2, new Identifier("universalmodcore", "null"));
     public final OBJRender vbo;
     public final int textureWidth;
     public final int textureHeight;
@@ -128,7 +128,8 @@ public class OBJModel {
                     }
                     return new GenericByteBuffer(toRGBA(img));
                 });
-                lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
+                Identifier base = new Identifier("universalmodcore", "textures/" + modelLoc.getPath() + "_" + variant + ".png");
+                lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds, base));
 
                 for (Integer lodValue : lodValues) {
                     if (lodValue < texSize) {
@@ -136,7 +137,8 @@ public class OBJModel {
                         Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.rgba", lodValue),
                                 builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
                         );
-                        lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds));
+                        Identifier lod = new Identifier("universalmodcore", "textures/" + modelLoc.getPath() + "_" + variant + "_" + lodValue + ".png");
+                        lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds, lod));
                     }
                 }
                 this.textures.put(variant, lodMap);
@@ -144,7 +146,13 @@ public class OBJModel {
                 if (hasNormals) {
                     try {
                         Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
-                        this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
+                        Identifier norm = new Identifier("universalmodcore", "textures/" + modelLoc.getPath() + "_" + variant + "_n.png");
+                        this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds, norm));
+                        for(Integer lodValue : lodValues){
+                            Identifier lod = new Identifier("universalmodcore", "textures/" + modelLoc.getPath() + "_" + variant + "_" + lodValue + "_n.png");
+                            this.normals.put(variant,
+                                             new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds, lod));
+                        }
                     } catch (Exception ex) {
                         ModCore.warn("Unable to load normal map for %s, %s", modelLoc, ex);
                     }
@@ -153,7 +161,12 @@ public class OBJModel {
                 if (hasSpeculars) {
                     try {
                     Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(toRGBA(builder.getSpeculars().get(variant).get())));
-                    this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
+                        Identifier spec = new Identifier("universalmodcore", "textures/" + modelLoc.getPath() + "_" + variant + "_s.png");
+                    this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds, spec));
+                    for(Integer lodValue : lodValues){
+                        Identifier lod = new Identifier("universalmodcore", "textures/" + modelLoc.getPath() + "_" + variant + "_" + lodValue + "_s.png");
+                        this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds, lod));
+                    }
                     } catch (Exception ex) {
                         ModCore.warn("Unable to load specular map for %s, %s", modelLoc, ex);
                     }

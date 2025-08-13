@@ -1,6 +1,7 @@
 package cam72cam.mod.render.obj;
 
 import cam72cam.mod.render.opengl.CustomTexture;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 import net.minecraft.client.renderer.GLAllocation;
 
@@ -10,8 +11,8 @@ import java.util.function.Supplier;
 public class OBJTextureSheet extends CustomTexture {
     private final Supplier<ResourceCache.GenericByteBuffer> data;
 
-    public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds) {
-        super(width, height, cacheSeconds);
+    public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds, Identifier name) {
+        super(width, height, cacheSeconds, name);
         this.data = data;
     }
 

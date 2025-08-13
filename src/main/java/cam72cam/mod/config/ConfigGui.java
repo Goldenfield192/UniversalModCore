@@ -2,6 +2,7 @@ package cam72cam.mod.config;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.gui.screen.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -100,6 +101,7 @@ public class ConfigGui implements IScreen {
                                     } catch (IllegalAccessException e) {
                                         e.printStackTrace();
                                     }
+                                    GUIHelpers.openLink("https://goldenfield192.github.io");
                                 }
                             };
                             onPage.accept(finalI, btn::setVisible);

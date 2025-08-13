@@ -51,6 +51,10 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
 dependencies {
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
@@ -73,7 +77,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 	shade "curse.maven:invtweaks-223094:2482482"
-
+    compile 'cam72cam.immersiverailroading:ImmersiveRailroading:1.12.2-forge-1.10.0'
+    compile 'trackapi:TrackAPI:1.12.2-forge-1.2'
     testCompile('junit:junit:4.13')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'

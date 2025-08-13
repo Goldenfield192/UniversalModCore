@@ -45,4 +45,8 @@ public class MinecraftTexture implements Texture {
         }
         return tex.getGlTextureId();
     }
+
+    public Identifier getName() {
+        return id;
+    }
 }

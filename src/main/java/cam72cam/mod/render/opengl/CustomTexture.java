@@ -3,16 +3,18 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.util.With;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import cam72cam.mod.resource.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 
+import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
 public abstract class CustomTexture implements Texture {
+    private Identifier name;
     private final int width;
     private final int height;
     private final int cacheSeconds;
@@ -48,30 +50,34 @@ public abstract class CustomTexture implements Texture {
     }
 
 
-    public CustomTexture(int width, int height, int cacheSeconds) {
+    public CustomTexture(int width, int height, int cacheSeconds, Identifier name) {
         synchronized (textures) {
             textures.add(this);
         }
         this.width = width;
         this.height = height;
         this.cacheSeconds = cacheSeconds;
+        this.name = name;
     }
 
     protected abstract ByteBuffer getData();
-    protected int internalGLFormat() {
-        return GL11.GL_RGBA;
-    }
 
     private void createTexture(ByteBuffer buffer) {
-        textureID = GL11.glGenTextures();
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] data = buffer.asIntBuffer().array();
+        //Wrap back to ARGB
+        for(int i = 0; i < width * height; i++){
+            int c_argb = data[i];
+            int r = c_argb >> 24 & 255;
+            int g = c_argb >> 16 & 255;
+            int b = c_argb >> 8 & 255;
+            int a = c_argb & 255;
+            data[i] = (a << 24) | (r << 16) | (g << 8) | b;
         }
+        image.setRGB(0, 0, width, height, data, 0, width);
+        DynamicTexture texture = new DynamicTexture(image);
+        Minecraft.getMinecraft().renderEngine.loadTexture(name.internal, texture);
+        textureID = Minecraft.getMinecraft().renderEngine.getTexture(name.internal).getGlTextureId();
     }
 
     private void threadedLoader() {
@@ -127,10 +133,15 @@ public abstract class CustomTexture implements Texture {
         return textureID == null ? NO_TEXTURE.getId() : this.textureID;
     }
 
+    public Identifier getName() {
+        return name;
+    }
+
     public void dealloc() {
         synchronized (textures) {
             if (this.textureID != null) {
-                GL11.glDeleteTextures(this.textureID);
+                Minecraft.getMinecraft().renderEngine.deleteTexture(name.internal);
+                this.name = null;
                 this.textureID = null;
                 this.loader = null;
             }
