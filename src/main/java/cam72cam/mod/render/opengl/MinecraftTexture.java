@@ -16,7 +16,6 @@ public class MinecraftTexture implements Texture {
         this.id = id;
     }
 
-    @Override
     public int getId() {
         TextureManager texManager = Minecraft.getMinecraft().getTextureManager();
 

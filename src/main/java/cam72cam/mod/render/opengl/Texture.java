@@ -3,13 +3,9 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.resource.Identifier;
 
 public interface Texture {
-    Texture NO_TEXTURE = Texture.wrap(-1);
+    Texture NO_TEXTURE = Texture.wrap(new Identifier("universalmodcore", "null"));
 
-    int getId();
-
-    static Texture wrap(int id) {
-        return () -> id;
-    }
+    Identifier getName();
 
     static Texture wrap(Identifier id) {
         return new MinecraftTexture(id);

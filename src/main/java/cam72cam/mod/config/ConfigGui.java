@@ -101,7 +101,6 @@ public class ConfigGui implements IScreen {
                                     } catch (IllegalAccessException e) {
                                         e.printStackTrace();
                                     }
-                                    GUIHelpers.openLink("https://goldenfield192.github.io");
                                 }
                             };
                             onPage.accept(finalI, btn::setVisible);

@@ -112,15 +112,27 @@ public abstract class CustomTexture implements Texture {
                 return this;
             }
         }
-        return () -> textureID;
+        return () -> name;
     }
 
     public boolean isLoaded() {
         return textureID != null;
     }
 
-    @Override
-    public int getId() {
+//    public int getId() {
+//        lastUsed = System.currentTimeMillis();
+//
+//        if (textureID == null) {
+//            if (Config.ThreadedTextureLoading) {
+//                threadedLoader();
+//            } else {
+//                directLoader();
+//            }
+//        }
+//        return textureID == null ? NO_TEXTURE.getName() : this.textureID;
+//    }
+
+    public Identifier getName() {
         lastUsed = System.currentTimeMillis();
 
         if (textureID == null) {
@@ -130,11 +142,7 @@ public abstract class CustomTexture implements Texture {
                 directLoader();
             }
         }
-        return textureID == null ? NO_TEXTURE.getId() : this.textureID;
-    }
-
-    public Identifier getName() {
-        return name;
+        return textureID == null ? NO_TEXTURE.getName() : this.name;
     }
 
     public void dealloc() {

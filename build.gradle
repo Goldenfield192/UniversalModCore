@@ -2,9 +2,9 @@ buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
     }
-	dependencies {
+    dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3.2'
-	}
+    }
 }
 
 configurations {
@@ -60,7 +60,7 @@ dependencies {
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
-      
+
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
@@ -76,7 +76,7 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-	shade "curse.maven:invtweaks-223094:2482482"
+    shade "curse.maven:invtweaks-223094:2482482"
     compile 'cam72cam.immersiverailroading:ImmersiveRailroading:1.12.2-forge-1.10.0'
     compile 'trackapi:TrackAPI:1.12.2-forge-1.2'
     testCompile('junit:junit:4.13')

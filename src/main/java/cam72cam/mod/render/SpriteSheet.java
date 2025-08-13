@@ -5,10 +5,14 @@ import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,22 +30,19 @@ public class SpriteSheet {
     }
 
     /** Create new blank sheet and add slots to unallocated */
-    private void allocateSheet() {
-        int textureID = GL11.glGenTextures();
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
-            int sheetSize = Math.min(1024, GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE));
-            TextureUtil.allocateTexture(textureID, sheetSize, sheetSize);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+    private void allocateSheet(Identifier id) {
+        int sheetSize = Math.min(1024, GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE));
+        BufferedImage image = new BufferedImage(sheetSize, sheetSize, BufferedImage.TYPE_INT_ARGB);
+        DynamicTexture texture = new DynamicTexture(image);
+        Minecraft.getMinecraft().getTextureManager().loadTexture(id.internal, texture);
+        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(id)))) {
             for (int uPx = 0; uPx < sheetSize; uPx += spriteSize) {
                 for (int vPx = 0; vPx < sheetSize; vPx += spriteSize) {
                     float u = uPx / (float) sheetSize;
                     float uMax = (uPx + spriteSize) / (float) sheetSize;
                     float v = vPx / (float) sheetSize;
                     float vMax = (vPx + spriteSize) / (float) sheetSize;
-                    unallocated.add(new SpriteInfo(u, uMax, uPx, v, vMax, vPx, textureID));
+                    unallocated.add(new SpriteInfo(u, uMax, uPx, v, vMax, vPx, id));
                 }
             }
         }
@@ -51,7 +52,7 @@ public class SpriteSheet {
     public void setSprite(Identifier id, ByteBuffer pixels) {
         if (!sprites.containsKey(id)) {
             if (unallocated.size() == 0) {
-                allocateSheet();
+                allocateSheet(id);
             }
             sprites.put(id, unallocated.remove(0));
         }
@@ -100,9 +101,9 @@ public class SpriteSheet {
         final float vMin;
         final float vMax;
         final int vPx;
-        final int texID;
+        final Identifier texID;
 
-        private SpriteInfo(float u, float uMax, int uPx, float v, float vMax, int vPx, int texID) {
+        private SpriteInfo(float u, float uMax, int uPx, float v, float vMax, int vPx, Identifier texID) {
             this.uMin = u;
             this.uMax = uMax;
             this.uPx = uPx;

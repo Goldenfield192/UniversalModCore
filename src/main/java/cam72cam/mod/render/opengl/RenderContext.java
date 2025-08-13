@@ -88,7 +88,6 @@ public class RenderContext {
         if (state.texture != null) {
             GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
             boolean oldTexEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
-            CustomTexture texture =
 
             if (state.texture == NO_TEXTURE) {
                 applyBool(GL11.GL_TEXTURE_2D, false);
@@ -97,12 +96,11 @@ public class RenderContext {
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                 });
             } else {
-                applyBool(GL11.GL_TEXTURE_2D, true);
+//                applyBool(GL11.GL_TEXTURE_2D, true);
                 TextureManager manager = Minecraft.getMinecraft().getTextureManager();
-                manager.bindTexture(state.texture.);
+                manager.bindTexture(state.texture.getName().internal);
 
                 int oldTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
                 restore.add(() -> {
                     GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
@@ -113,55 +111,55 @@ public class RenderContext {
 
         if (shaderActive) {
 
-            if (state.normals != null) {
-                // Normals
-                GL13.glActiveTexture(GL13.GL_TEXTURE2);
-                boolean oldNormalEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
-
-                if (state.normals == NO_TEXTURE) {
-                    applyBool(GL11.GL_TEXTURE_2D, false);
-                    restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
-                        applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
-                    });
-                } else {
-                    applyBool(GL11.GL_TEXTURE_2D, true);
-
-                    int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
-                    restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
-                        applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
-                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldNorm);
-                    });
-                }
-                GL13.glActiveTexture(GL13.GL_TEXTURE0);
-            }
-            if (state.specular != null) {
-                // Specular
-                GL13.glActiveTexture(GL13.GL_TEXTURE3);
-                boolean oldSpecularEnalbed = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
-
-                if (state.specular == NO_TEXTURE) {
-                    applyBool(GL11.GL_TEXTURE_2D, false);
-                    restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
-                        applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
-                    });
-                } else {
-                    applyBool(GL11.GL_TEXTURE_2D, true);
-
-                    int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
-                    restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
-                        applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
-                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldSpec);
-                    });
-                }
-                GL13.glActiveTexture(GL13.GL_TEXTURE0);
-
-            }
+//            if (state.normals != null) {
+//                // Normals
+//                GL13.glActiveTexture(GL13.GL_TEXTURE2);
+//                boolean oldNormalEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+//
+//                if (state.normals == NO_TEXTURE) {
+//                    applyBool(GL11.GL_TEXTURE_2D, false);
+//                    restore.add(() -> {
+//                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+//                        applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
+//                    });
+//                } else {
+//                    applyBool(GL11.GL_TEXTURE_2D, true);
+//
+//                    int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+//                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
+//                    restore.add(() -> {
+//                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+//                        applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
+//                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldNorm);
+//                    });
+//                }
+//                GL13.glActiveTexture(GL13.GL_TEXTURE0);
+//            }
+//            if (state.specular != null) {
+//                // Specular
+//                GL13.glActiveTexture(GL13.GL_TEXTURE3);
+//                boolean oldSpecularEnalbed = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+//
+//                if (state.specular == NO_TEXTURE) {
+//                    applyBool(GL11.GL_TEXTURE_2D, false);
+//                    restore.add(() -> {
+//                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+//                        applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
+//                    });
+//                } else {
+//                    applyBool(GL11.GL_TEXTURE_2D, true);
+//
+//                    int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+//                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
+//                    restore.add(() -> {
+//                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+//                        applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
+//                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldSpec);
+//                    });
+//                }
+//                GL13.glActiveTexture(GL13.GL_TEXTURE0);
+//
+//            }
         }
 
 

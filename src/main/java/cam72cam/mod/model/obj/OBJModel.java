@@ -296,7 +296,7 @@ public class OBJModel {
                 state.texture(tex.synchronous(true));
             } else {
                 // Start load even if not loaded
-                tex.getId();
+                tex.getName();
 
                 if (!tex.isLoaded()) {
                     // Try to find a loaded LOD, with a sane default
