@@ -59,6 +59,7 @@ minecraft {
 
 repositories {
     maven { url = 'https://repo.spongepowered.org/maven' }
+    maven { url = "https://teamopenindustry.cc/maven" }
 }
 
 configurations {
@@ -95,6 +96,8 @@ dependencies {
     annotationProcessor 'com.google.code.gson:gson:2.8.9'
     annotationProcessor 'org.spongepowered:mixin:0.8'
     testCompile('junit:junit:4.13')
+//    compile('cam72cam.immersiverailroading:ImmersiveRailroading:1.12.2-forge-1.10.0')
+//    compile('trackapi:TrackAPI:1.12.2-forge-1.2')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
@@ -102,6 +105,15 @@ dependencies {
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 }
+
+jar.manifest.attributes(
+        'FMLAT': 'UniversalModCore_at.cfg',
+        'FMLCorePluginContainsFMLMod': true,
+        'ForceLoadAsMod': true,
+        'FMLCorePlugin': 'cam72cam.mod.UMCMixinLoadingPlugin',
+        'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+        'MixinConfigs': 'mixins.universalmodcore.json'
+)
 
 jar {
     configurations.shade.each { dep ->
@@ -114,17 +126,6 @@ jar {
         it.isDirectory() ? it : zipTree(it)
     }) {
         exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
-    }
-
-    manifest {
-        attributes (
-                'FMLAT': 'UniversalModCore_at.cfg',
-                'FMLCorePluginContainsFMLMod': true,
-                'FMLCorePlugin': 'cam72cam.mod.UMCMixinLoadingPlugin',
-                'ForceLoadAsMod': true,
-                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-                'MixinConfigs': 'mixins.universalmodcore.json'
-        )
     }
 }
 

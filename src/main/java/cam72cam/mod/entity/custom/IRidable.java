@@ -44,6 +44,10 @@ public interface IRidable {
     /** Allows player animation to be set to sitting (WARNING: not supported on all versions) */
     boolean shouldRiderSit(Entity passenger);
 
+    default boolean shouldRiderLie(Entity passenger) {
+        return true;
+    }
+
     /** Rider position offset from center of entity */
     Vec3d getMountOffset(Entity passenger, Vec3d offset);
 
@@ -52,4 +56,10 @@ public interface IRidable {
 
     /** Calculate offset from center of entity during dismount */
     Vec3d onDismountPassenger(Entity passenger, Vec3d offset);
+
+    enum PlayerState {
+        STANDING,
+        SITTING,
+        LYING
+    }
 }

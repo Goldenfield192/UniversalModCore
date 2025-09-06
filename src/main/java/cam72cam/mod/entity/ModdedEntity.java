@@ -365,6 +365,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
 
             seat.shouldSit = iRidable.shouldRiderSit(passenger);
+            seat.state = seat.shouldSit ? IRidable.PlayerState.SITTING : iRidable.shouldRiderLie(passenger) ? IRidable.PlayerState.LYING : IRidable.PlayerState.STANDING;
         }
     }
 

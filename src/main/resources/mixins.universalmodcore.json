@@ -8,5 +8,7 @@
   "mixins": [
   ],
   "client": [
+    "MixinEntityRenderer",
+    "feature.sleep_stock.MixinRenderPlayer"
   ]
 }

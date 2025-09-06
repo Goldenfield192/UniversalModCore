@@ -1,6 +1,7 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.custom.IRidable;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
@@ -21,6 +22,8 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     private UUID parent;
     // What is in the seat
     private UUID passenger;
+    //What the passenger is doing?
+    public IRidable.PlayerState state;
     // If we should try to render the rider as standing or sitting (partial support!)
     boolean shouldSit = true;
     // If a passenger has mounted and then dismounted (if so, we can go away)
@@ -115,6 +118,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         return null;
     }
 
+    public void trySleep() {
+        if(this.getParent() != null && !this.getPassengers().isEmpty()) {
+
+        }
+    }
+
     @Override
     public double getMountedYOffset() {
         return 0;
@@ -130,7 +139,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public boolean shouldRiderSit() {
-        return shouldSit;
+        return state == IRidable.PlayerState.SITTING;
     }
 
     @Override
