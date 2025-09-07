@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.Side;
@@ -98,6 +99,8 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 this.setDead();
             }
         }
+
+//        this.trySleep();
     }
 
     public void setup(ModdedEntity moddedEntity, Entity passenger) {
@@ -119,8 +122,9 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public void trySleep() {
-        if(this.getParent() != null && !this.getPassengers().isEmpty()) {
-
+        if(this.getParent() != null && !this.getPassengers().isEmpty() && this.getEntityPassenger().isPlayer()) {
+            Player player = this.getEntityPassenger().asPlayer();
+            player.internal.trySleep(new BlockPos(this.posX, this.posY, this.posZ));
         }
     }
 

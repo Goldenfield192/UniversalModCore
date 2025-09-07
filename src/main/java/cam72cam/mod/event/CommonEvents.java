@@ -1,18 +1,26 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.SeatEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
+import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
+import net.minecraftforge.event.entity.player.SleepingLocationCheckEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 
+import java.lang.ref.WeakReference;
 import java.util.function.Consumer;
 
 /** Registry of events that fire off on both client and server.  Do not use directly! */
@@ -110,6 +118,49 @@ public class CommonEvents {
             if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.getWorld(), event.getEntity()))) {
                 event.setCanceled(true);
             }
+        }
+
+        @SubscribeEvent
+        public static void onPlayerSleep(PlayerSleepInBedEvent event) {
+            EntityPlayer player = event.getEntityPlayer();
+            if (!player.getEntityWorld().isRemote) {
+                net.minecraft.entity.Entity riding = player.getRidingEntity();
+                if (riding instanceof SeatEntity) {
+                    SeatEntity seat = (SeatEntity) riding;
+                    if (seat.getParent() == null) {
+                        event.setResult(EntityPlayer.SleepResult.OTHER_PROBLEM);
+                        return;
+                    }
+                    BlockPos pos = seat.getPosition();
+                    if (event.getPos().equals(pos)) {
+                        event.setResult(EntityPlayer.SleepResult.OK);
+
+                        if (event.getResultStatus() == EntityPlayer.SleepResult.OK) {
+
+                        }
+                    }
+                }
+            }
+        }
+
+
+        @SubscribeEvent(priority = EventPriority.HIGH)
+        public void onLocationCheck(SleepingLocationCheckEvent event) {
+            EntityPlayer player = event.getEntityPlayer();
+            if (!player.getEntityWorld().isRemote) {
+                net.minecraft.entity.Entity riding = player.getRidingEntity();
+                if (riding instanceof SeatEntity) {
+                    SeatEntity seat = (SeatEntity) riding;
+                    if (!(seat.getParent() == null) && !seat.getParent().isDead()) {
+                        event.setResult(net.minecraftforge.fml.common.eventhandler.Event.Result.ALLOW);
+                    }
+                }
+            }
+        }
+
+        @SubscribeEvent
+        public void onWakeUp(PlayerWakeUpEvent event) {
+
         }
     }
 }

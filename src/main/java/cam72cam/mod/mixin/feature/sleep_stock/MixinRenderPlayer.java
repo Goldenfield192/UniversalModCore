@@ -25,7 +25,7 @@ public class MixinRenderPlayer {
             return instance.getBedOrientationInDegrees();
         } else {
             if(((SeatEntity) instance.getRidingEntity()).getParent() != null){
-                return ((SeatEntity) instance.getRidingEntity()).getParent().getRotationYaw();
+                return instance.getRotationYawHead();
             } else {
                 return 0F;
             }

@@ -3,10 +3,10 @@ buildscript {
         maven { url = "https://maven.minecraftforge.net/" }
         maven { url = 'https://repo.spongepowered.org/maven' }
     }
-	dependencies {
+    dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3.2'
         classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
-	}
+    }
 }
 
 configurations {
@@ -59,12 +59,10 @@ minecraft {
 
 repositories {
     maven { url = 'https://repo.spongepowered.org/maven' }
+    maven {
+        url 'https://maven.cleanroommc.com'
+    }
     maven { url = "https://teamopenindustry.cc/maven" }
-}
-
-configurations {
-    embed
-    compile.extendsFrom(embed)
 }
 
 dependencies {
@@ -72,7 +70,7 @@ dependencies {
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
-      
+
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
@@ -88,16 +86,21 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-	shade "curse.maven:invtweaks-223094:2482482"
-
-    embed 'org.spongepowered:mixin:0.8'
+    shade "curse.maven:invtweaks-223094:2482482"
     annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
     annotationProcessor 'com.google.guava:guava:32.1.2-jre'
     annotationProcessor 'com.google.code.gson:gson:2.8.9'
-    annotationProcessor 'org.spongepowered:mixin:0.8'
+
+    // ForgeGradle:
+    compile ('zone.rong:mixinbooter:9.1') {
+        transitive = false
+    }
+    annotationProcessor ('zone.rong:mixinbooter:9.1') {
+        transitive = false
+    }
     testCompile('junit:junit:4.13')
-//    compile('cam72cam.immersiverailroading:ImmersiveRailroading:1.12.2-forge-1.10.0')
-//    compile('trackapi:TrackAPI:1.12.2-forge-1.2')
+    compile('cam72cam.immersiverailroading:ImmersiveRailroading:1.12.2-forge-1.10.0')
+    compile('trackapi:TrackAPI:1.12.2-forge-1.2')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
@@ -106,15 +109,6 @@ mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 }
 
-jar.manifest.attributes(
-        'FMLAT': 'UniversalModCore_at.cfg',
-        'FMLCorePluginContainsFMLMod': true,
-        'ForceLoadAsMod': true,
-        'FMLCorePlugin': 'cam72cam.mod.UMCMixinLoadingPlugin',
-        'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-        'MixinConfigs': 'mixins.universalmodcore.json'
-)
-
 jar {
     configurations.shade.each { dep ->
         from(project.zipTree(dep)){
@@ -122,10 +116,15 @@ jar {
         }
     }
 
-    from(configurations.embed.collect {
-        it.isDirectory() ? it : zipTree(it)
-    }) {
-        exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
+    manifest {
+        attributes (
+                'FMLAT': 'UniversalModCore_at.cfg',
+                'FMLCorePluginContainsFMLMod': true,
+                'FMLCorePlugin': 'cam72cam.mod.UMCMixinLoadingPlugin',
+                'ForceLoadAsMod': true,
+                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+                'MixinConfigs': 'mixins.universalmodcore.json'
+        )
     }
 }
 

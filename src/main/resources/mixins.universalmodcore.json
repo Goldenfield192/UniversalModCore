@@ -6,6 +6,7 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "feature.sleep_stock.MixinEntityPlayer"
   ],
   "client": [
     "MixinEntityRenderer",
