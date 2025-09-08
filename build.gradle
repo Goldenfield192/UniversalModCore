@@ -114,6 +114,11 @@ minecraft {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.34'
     // you may put jars on which you depend on in ./libs
@@ -138,6 +143,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    implementation fg.deobf('cam72cam.immersiverailroading:ImmersiveRailroading:1.16.5-forge-1.10.0')
+    implementation fg.deobf('trackapi:TrackAPI:1.16.5-forge-1.2')
     testImplementation ('junit:junit:4.13')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
