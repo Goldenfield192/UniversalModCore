@@ -1,7 +1,7 @@
 package cam72cam.mod;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -344,7 +344,7 @@ public class ModCore {
                             translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
                         });
                         String output = "{" + String.join(",", translations) + "}";
-                        return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
+                        return new ByteArrayInputStream(output.getBytes(Charset.defaultCharset()));
                     }
                 }
                 return null;
