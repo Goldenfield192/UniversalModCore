@@ -12,7 +12,6 @@ import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.ModList;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -326,9 +325,10 @@ public class ModCore {
                     if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
                         Map<String, String> translationMap = new HashMap<>();
                         for (IResource resource : Minecraft.getInstance().getResourceManager().getResources(lang)) {
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
+                                    //Remove comment
                                     line = line.trim();
                                     if(line.isEmpty()) continue;
 
@@ -338,14 +338,13 @@ public class ModCore {
 
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        String value = StringEscapeUtils.escapeJava(splits[1].trim()).replace("\\\\", "\\");
-                                        translationMap.put(splits[0].trim(), value);
+                                        translationMap.put(splits[0].trim(), splits[1].trim());
                                     }
                                 }
                             }
                         }
 
-                        List<String> translations = new ArrayList<>();
+                        Set<String> translations = new HashSet<>();
                         translationMap.forEach((key, value) -> {
                             if (!key.isEmpty()) {
                                 translations.add(String.format("\"%s\": \"%s\"", key, value));
@@ -433,7 +432,7 @@ public class ModCore {
 
     public static class ServerProxy extends Proxy {
         @Override
-		public void event(ModEvent event, Mod m) {
+        public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.serverEvent(event);
         }
@@ -481,7 +480,7 @@ public class ModCore {
                     // Instance can be null during data gen
                     if (Minecraft.getInstance() != null) {
                         ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                                                                                                                                   stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
                         Light.register();
                     }
                 case SETUP:
