@@ -1,7 +1,7 @@
 package cam72cam.mod;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -12,6 +12,7 @@ import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.ModList;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -328,9 +329,17 @@ public class ModCore {
                             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
+                                    line = line.trim();
+                                    if(line.isEmpty()) continue;
+
+                                    int comment = line.indexOf("#");
+                                    if(comment == 0) continue;
+                                    if(comment != -1) line = line.substring(0, comment);
+
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        translationMap.put(splits[0], splits[1]);
+                                        String value = StringEscapeUtils.escapeJava(splits[1].trim()).replace("\\\\", "\\");
+                                        translationMap.put(splits[0].trim(), value);
                                     }
                                 }
                             }
@@ -338,13 +347,15 @@ public class ModCore {
 
                         List<String> translations = new ArrayList<>();
                         translationMap.forEach((key, value) -> {
-                            translations.add(String.format("\"%s\": \"%s\"", key, value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            if (!key.isEmpty()) {
+                                translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            }
                         });
                         String output = "{" + String.join(",", translations) + "}";
-                        return new ByteArrayInputStream(output.getBytes(Charset.defaultCharset()));
+                        return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
                     }
                 }
                 return null;
