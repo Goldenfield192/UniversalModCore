@@ -5,6 +5,7 @@ import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -126,6 +127,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
     @Override
     public void render(T stock, float entityYaw, float partialTicks, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
+        RenderContext.pushStage(RenderContext.RenderStage.ENTITY);
         Entity self = stock.getSelf();
 
         RenderType.cutout().setupRenderState();
@@ -134,6 +136,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         int j = i % 65536;
         int k = i / 65536;
+        RenderContext.setDefaultLights(j, k);
         RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
@@ -145,6 +148,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
         RenderType.cutout().clearRenderState();
+        RenderContext.popStage();
     }
 
     @Nullable

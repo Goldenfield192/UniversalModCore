@@ -9,7 +9,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
@@ -135,5 +137,39 @@ public class RenderContext {
         if (err != 0) {
             ModCore.error("We broke something: %s", err);
         }
+    }
+    //Internal
+    private static final Deque<RenderStage> stages = new ArrayDeque<>();
+    public static int[] defaultLights;
+
+    public static void pushStage(RenderStage stage) {
+        stages.push(stage);
+    }
+
+    public static void popStage() {
+        RenderStage stage = stages.pop();
+        if(stage == RenderStage.ENTITY) {
+            defaultLights = null;
+        }
+    }
+
+    public static RenderStage getCurrentStage() {
+        return stages.isEmpty() ? RenderStage.NONE : stages.peek();
+    }
+
+    //In ENTITY phase
+    public static void setDefaultLights(int j, int k) {
+        if (getCurrentStage() == RenderStage.ENTITY) {
+            defaultLights = new int[]{j, k};
+        }
+    }
+
+    public enum RenderStage {
+        BLOCK,
+        ENTITY,
+        ITEM,
+        GUI,
+        OVERLAY,
+        NONE
     }
 }

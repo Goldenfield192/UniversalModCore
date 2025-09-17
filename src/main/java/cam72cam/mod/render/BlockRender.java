@@ -6,6 +6,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -88,20 +89,25 @@ public class BlockRender {
 
                 @Override
                 public void render(TileEntity te, float partialTicks, PoseStack var3, MultiBufferSource var4, int combinedLightIn, int var6) {
+                    RenderContext.pushStage(RenderContext.RenderStage.BLOCK);
                     if (ModCore.isInReload()) {
+                        RenderContext.popStage();
                         return;
                     }
 
                     BlockEntity instance = te.instance();
                     if (instance == null) {
+                        RenderContext.popStage();
                         return;
                     }
                     StandardModel model = render.apply(instance);
                     if (model == null) {
+                        RenderContext.popStage();
                         return;
                     }
 
                     if (!model.hasCustom()) {
+                        RenderContext.popStage();
                         return;
                     }
 
@@ -114,6 +120,7 @@ public class BlockRender {
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
                     RenderType.solid().clearRenderState();
+                    RenderContext.popStage();
                 }
 
                 @Override

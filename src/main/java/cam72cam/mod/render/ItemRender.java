@@ -268,7 +268,9 @@ public class ItemRender {
         return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
             @Override
             public void renderByItem(net.minecraft.world.item.ItemStack stack, TransformType p_239207_2_, PoseStack matrixStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
+                RenderContext.pushStage(RenderContext.RenderStage.ITEM);
                 doRender.accept(matrixStack, combinedLight);
+                RenderContext.popStage();
             }
         };
     }

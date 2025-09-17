@@ -109,7 +109,9 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
+                RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
                 func.render(new RenderState(event.getMatrixStack()), event.getPartialTicks());
+                RenderContext.popStage();
             }
         });
     }
@@ -120,7 +122,9 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
+                    RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getMatrix()), event.getPartialTicks());
+                    RenderContext.popStage();
                 }
             }
         });
@@ -171,9 +175,11 @@ public class GlobalRender {
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F);
 
+        RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
         try (With ctx = RenderContext.apply(state)) {
             fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
         }
+        RenderContext.popStage();
     }
 
     @FunctionalInterface

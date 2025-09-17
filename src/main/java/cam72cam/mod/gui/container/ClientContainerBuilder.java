@@ -54,6 +54,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     protected void renderBg(PoseStack stack, float partialTicks, int mouseX, int mouseY) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(
                 new RenderState(stack).color(1, 1, 1, 1)
         )) {
@@ -62,6 +63,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             this.centerY = (this.height - this.imageHeight) / 2;
             server.draw.accept(this);
         }
+        RenderContext.popStage();
     }
 
     @Override
@@ -76,6 +78,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.blit(stack, centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
             // Top Bar
@@ -85,11 +88,13 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             // Top Right Corner
             super.blit(stack, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
         }
+        RenderContext.popStage();
         return y + topOffset;
     }
 
     @Override
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             x += paddingLeft;
             if (handler != null && handler.getSlotCount() > slotID) {
@@ -98,10 +103,12 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
                 drawRect(centerX + x, centerY + y, slotSize, slotSize, 0xFF444444);
             }
         }
+        RenderContext.popStage();
     }
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             // Left Side
             super.blit(stack, centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
@@ -115,6 +122,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             // Right Side
             super.blit(stack, centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         }
+        RenderContext.popStage();
         return y + slotSize;
     }
 
@@ -132,6 +140,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             // Left Bottom
             super.blit(stack, centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
@@ -142,31 +151,38 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             // Right Bottom
             super.blit(stack, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
         }
+        RenderContext.popStage();
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.blit(stack, centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
         }
+        RenderContext.popStage();
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.blit(stack, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         }
+        RenderContext.popStage();
         return y + midBarHeight;
     }
 
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.blit(stack, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
         }
+        RenderContext.popStage();
         return y + 96;
     }
 
@@ -204,6 +220,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public void drawSlotOverlay(ItemStack stack, int x, int y) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
@@ -219,10 +236,12 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             drawRect(x, y, 16, 16, -2130706433);
             GlStateManager._enableDepthTest();
         }
+        RenderContext.popStage();
     }
 
     @Override
     public void drawSlotOverlay(String spriteId, int x, int y, double height, int color) {
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
@@ -244,6 +263,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         )) {
             blit(stack, x, y, 0, 16, 16, sprite);
         }
+        RenderContext.popStage();
     }
 
     @Override
