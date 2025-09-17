@@ -16,14 +16,26 @@ public class DirectDraw {
     public void draw(RenderState state) {
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
         ShaderInstance shader = RenderSystem.getShader();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
-        try (With ctx = RenderContext.apply(state)) {
-            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-            for (VertexBuilder vert : verts) {
-                vert.draw(builder);
+        if (RenderContext.getCurrentStage() == RenderContext.RenderStage.OVERLAY) {
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            try (With ctx = RenderContext.apply(state)) {
+                builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+                for (VertexBuilder vert : verts) {
+                    vert.draw(builder);
+                }
+                builder.end();
+                BufferUploader.end(builder);
             }
-            builder.end();
-            BufferUploader.end(builder);
+        } else  {
+            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            try (With ctx = RenderContext.apply(state)) {
+                builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+                for (VertexBuilder vert : verts) {
+                    vert.draw(builder);
+                }
+                builder.end();
+                BufferUploader.end(builder);
+            }
         }
         RenderSystem.setShader(() -> shader);
     }

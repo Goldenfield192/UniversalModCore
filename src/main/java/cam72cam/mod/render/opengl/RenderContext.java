@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
@@ -24,8 +25,16 @@ public class RenderContext {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
-        if (getCurrentStage() == RenderStage.GUI) {
+        if (getCurrentStage() == RenderStage.GUI && state.texture != null) {
+            float[] oldColor = RenderSystem.getShaderColor();
             RenderSystem.setShaderTexture(0, state.texture.getId());
+            if (state.color != null) {
+                ShaderInstance oldShader = RenderSystem.getShader();
+                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
+                restore.add(() -> RenderSystem.setShader(() -> oldShader));
+            }
+            restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
             return () -> restore.forEach(Runnable::run);
         }
 

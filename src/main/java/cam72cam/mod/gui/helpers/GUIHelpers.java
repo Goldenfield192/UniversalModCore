@@ -115,12 +115,11 @@ public class GUIHelpers {
         drawCenteredString(text, x, y, color, new Matrix4());
     }
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderContext.pushStage(RenderContext.RenderStage.GUI);
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
-        state.model_view().multiply(matrix);
-        try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().font.draw(new PoseStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
-        }
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);        PoseStack stack = new PoseStack();
+        matrix.m23 = 10;//Z transform
+        stack.setIdentity();
+        stack.mulPoseMatrix(matrix.toMojMatrix4f());
+        Minecraft.getInstance().font.draw(stack, text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
         RenderContext.popStage();
     }
 
