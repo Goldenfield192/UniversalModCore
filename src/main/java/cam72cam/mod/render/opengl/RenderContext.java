@@ -24,6 +24,11 @@ public class RenderContext {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
+        if (getCurrentStage() == RenderStage.GUI) {
+            RenderSystem.setShaderTexture(0, state.texture.getId());
+            return () -> restore.forEach(Runnable::run);
+        }
+
         ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = RenderSystem.getModelViewMatrix().copy();

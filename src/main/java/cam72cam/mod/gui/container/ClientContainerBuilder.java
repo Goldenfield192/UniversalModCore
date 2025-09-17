@@ -181,6 +181,8 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
         try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.blit(stack, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+
+            drawPlayerInventoryLabel(normInvOffset + paddingLeft, y - 1);
         }
         RenderContext.popStage();
         return y + 96;
@@ -264,6 +266,15 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             blit(stack, x, y, 0, 16, 16, sprite);
         }
         RenderContext.popStage();
+    }
+
+    @Override
+    protected void renderLabels(PoseStack p_97808_, int p_97809_, int p_97810_) {
+        this.font.draw(p_97808_, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
+    }
+
+    private void drawPlayerInventoryLabel(int x, int y){
+        this.font.draw(stack, this.playerInventoryTitle, centerX + x, centerY + y, 4210752);
     }
 
     @Override
