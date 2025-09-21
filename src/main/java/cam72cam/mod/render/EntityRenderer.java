@@ -142,6 +142,9 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
 
+        RenderContext.STACK = p_225623_4_;
+        RenderContext.partialTick = partialTicks;
+        RenderContext.entity = stock;
         // State may be modified in render, before calling in to post-render
         renderers.get(self.getClass()).render(self, state.clone(), partialTicks);
         // TODO
