@@ -1,13 +1,13 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.model.obj.ElementBuffer;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +30,15 @@ public class VBO {
         });
     }
 
-    private final Supplier<VertexBuffer> buffer;
+    private final Supplier<ElementBuffer> buffer;
     private final Consumer<RenderState> settings;
 
     private int vbo;
+    private int ebo;
     private int length;
     private long lastUsed;
     private VertexBuffer vbInfo;
+    private ElementBuffer elementBuffer;
 
     private static final ExecutorService pool = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
             5L, TimeUnit.SECONDS,
@@ -47,11 +49,12 @@ public class VBO {
                 thread.setPriority(Thread.MIN_PRIORITY);
                 return thread;
             });
-    private Future<FloatBuffer> loader = null;
+    private Future<FloatBuffer> vboLoader = null;
 
-    public VBO(Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
+    public VBO(Supplier<ElementBuffer> buffer, Consumer<RenderState> settings) {
         this.buffer = buffer;
         this.vbo = -1;
+        this.ebo = -1;
         this.settings = settings;
 
         synchronized (vbos) {
@@ -60,29 +63,33 @@ public class VBO {
     }
 
     private void init() {
-        if (loader != null) {
-            if (loader.isDone()) {
+        if (vboLoader != null) {
+            if (vboLoader.isDone()) {
                 try {
                     int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
 
                     vbo = GL15.glGenBuffers();
                     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-                    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, loader.get(), GL15.GL_STATIC_DRAW);
+                    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vboLoader.get(), GL15.GL_STATIC_DRAW);
+
+                    ebo = GL15.glGenBuffers();
+                    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo);
+                    GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, vboLoader.get(), GL15.GL_STATIC_DRAW);
 
                     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-                loader = null;
+                vboLoader = null;
             }
         } else {
             // Start thread
-            loader = pool.submit(() -> {
-                VertexBuffer vb = buffer.get();
-                this.length = vb.data.length / (vb.stride);
-                this.vbInfo = new VertexBuffer(0, vb.hasNormals);
-                FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(vb.data.length);
-                buffer.put(vb.data);
+            vboLoader = pool.submit(() -> {
+                ElementBuffer eb = buffer.get();
+                this.length = eb.data.length / (eb.vbo.stride);
+                this.vbInfo = new VertexBuffer(0, eb.vbo.hasNormals);
+                FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(eb.data.length);
+                buffer.put(eb.vbo.data);
                 buffer.position(0);
                 return buffer;
             });

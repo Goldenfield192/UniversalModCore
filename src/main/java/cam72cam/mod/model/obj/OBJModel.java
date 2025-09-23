@@ -60,7 +60,7 @@ public class OBJModel {
         }
 
         String settings = Arrays.toString(new Object[]{
-                "v1",
+                "v2",
                 scale,
                 darken,
                 variants == null ? "[]" : String.join(":", variants),
@@ -76,7 +76,11 @@ public class OBJModel {
 
         Supplier<GenericByteBuffer> vboData = cache.getResource(
                 "model.bin",
-                builder -> new GenericByteBuffer(builder.vertexBufferObject().data)
+                builder -> new GenericByteBuffer(builder.getVBOData())
+        );
+        Supplier<GenericByteBuffer> eboData = cache.getResource(
+                "model.ebo.bin",
+                builder -> new GenericByteBuffer(builder.getEBOData())
         );
         TagCompound meta = new TagCompound(cache.getResource(
                 "meta.nbt",

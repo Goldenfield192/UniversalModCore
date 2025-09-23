@@ -1,5 +1,6 @@
 package cam72cam.mod.render.obj;
 
+import cam72cam.mod.model.obj.ElementBuffer;
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.VertexBuffer;
@@ -16,9 +17,9 @@ import java.util.function.Supplier;
 
 public class OBJRender extends VBO {
     public final OBJModel model;
-    public final Supplier<VertexBuffer> buffer;
+    public final Supplier<ElementBuffer> buffer;
 
-    public OBJRender(OBJModel model, Supplier<VertexBuffer> buffer) {
+    public OBJRender(OBJModel model, Supplier<ElementBuffer> buffer) {
         super(buffer, s -> {});
         this.model = model;
         this.buffer = buffer;

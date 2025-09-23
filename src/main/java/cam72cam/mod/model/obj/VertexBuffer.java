@@ -19,8 +19,13 @@ public class VertexBuffer {
         this.colorOffset = textureOffset + 2;
         this.normalOffset = hasNormals ? colorOffset + 4 : Integer.MIN_VALUE;
         this.stride = hasNormals ? normalOffset + 3 : colorOffset + 4;
-
-        this.data = data != null ? data : new float[faces * vertsPerFace * stride];
+        if (data != null) {
+            float[] vboData = new float[(int) data[0]];
+            System.arraycopy(data, 1, vboData, 0, (int) data[0]);
+            this.data = vboData;
+        } else {
+            this.data = new float[faces * vertsPerFace * stride];
+        }
     }
 
     public VertexBuffer(int faces, boolean hasNormals) {

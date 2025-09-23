@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class OBJBuilder {
 
-    private final VertexBuffer vbo;
+    private final ElementBuffer ebo;
     private final List<OBJGroup> groups;
     private final OBJTexturePacker packer;
     private final int textureWidth;
@@ -32,7 +32,7 @@ public class OBJBuilder {
 
         OBJParser parser = new OBJParser(new ByteArrayInputStream(input.apply(modelLoc)), scale);
         this.groups = parser.getGroups();
-        this.vbo = parser.getBuffer();
+        this.ebo = parser.getElementBuffer();
         this.smoothShading = parser.isSmoothShading();
 
         if (Config.getMaxTextureSize() <= 0) {
@@ -48,16 +48,16 @@ public class OBJBuilder {
         Map<String, Material> materialLookup = materials.stream().collect(Collectors.toMap(m -> m.name, m -> m));
 
         String[] faceMaterials = parser.getFaceMaterials();
-        int colorOffset = vbo.colorOffset;
-        int textureOffset = vbo.textureOffset;
+        int colorOffset = ebo.vbo.colorOffset;
+        int textureOffset = ebo.vbo.textureOffset;
         float mult = 1 - darken * 5;
         for (String materialName : faceMaterials) {
             if (materialName != null) {
                 Material material = materialLookup.get(materialName);
                 if (material == null) {
                     ModCore.warn("Unknown material '%s' in %s", materialName, modelLoc);
-                    colorOffset += vbo.stride * 3;
-                    textureOffset += vbo.stride * 3;
+                    colorOffset += ebo.vbo.stride * 3;
+                    textureOffset += ebo.vbo.stride * 3;
                     continue;
                 }
                 material.used = true;
@@ -68,15 +68,15 @@ public class OBJBuilder {
                 float vmaxV = 0;
 
                 for (int point = 0; point < 3; point++) {
-                    int pointOffset = point * vbo.stride;
+                    int pointOffset = point * ebo.vbo.stride;
 
-                    vbo.data[colorOffset + pointOffset + 0] = material.hasTexture() ? material.KdR * mult : 1;
-                    vbo.data[colorOffset + pointOffset + 1] = material.hasTexture() ? material.KdG * mult : 1;
-                    vbo.data[colorOffset + pointOffset + 2] = material.hasTexture() ? material.KdB * mult : 1;
-                    vbo.data[colorOffset + pointOffset + 3] = material.KdA;
+                    ebo.vbo.data[colorOffset + pointOffset + 0] = material.hasTexture() ? material.KdR * mult : 1;
+                    ebo.vbo.data[colorOffset + pointOffset + 1] = material.hasTexture() ? material.KdG * mult : 1;
+                    ebo.vbo.data[colorOffset + pointOffset + 2] = material.hasTexture() ? material.KdB * mult : 1;
+                    ebo.vbo.data[colorOffset + pointOffset + 3] = material.KdA;
 
-                    float u = vbo.data[textureOffset + pointOffset + 0];
-                    float v = vbo.data[textureOffset + pointOffset + 1];
+                    float u = ebo.vbo.data[textureOffset + pointOffset + 0];
+                    float v = ebo.vbo.data[textureOffset + pointOffset + 1];
 
                     //System.out.println(String.format("u: %s v:%s", u, v));
                     if (point == 0) {
@@ -96,23 +96,23 @@ public class OBJBuilder {
                     int offsetV = (int) Math.floor(vminV);
                     // "Normalize" uv coordinates to start between 0 and 1 and repeat into positive integer space
                     for (int point = 0; point < 3; point++) {
-                        int pointOffset = point * vbo.stride;
-                        vbo.data[textureOffset + pointOffset + 0] -= offsetU;
-                        vbo.data[textureOffset + pointOffset + 1] -= offsetV;
+                        int pointOffset = point * ebo.vbo.stride;
+                        ebo.vbo.data[textureOffset + pointOffset + 0] -= offsetU;
+                        ebo.vbo.data[textureOffset + pointOffset + 1] -= offsetV;
                     }
 
                     material.copiesU = Math.max(material.copiesU, (int) Math.ceil(vmaxU - offsetU));
                     material.copiesV = Math.max(material.copiesV, (int) Math.ceil(vmaxV - offsetV));
                 } else {
                     for (int point = 0; point < 3; point++) {
-                        int pointOffset = point * vbo.stride;
-                        vbo.data[textureOffset + pointOffset + 0] = 0.5f;
-                        vbo.data[textureOffset + pointOffset + 1] = 0.5f;
+                        int pointOffset = point * ebo.vbo.stride;
+                        ebo.vbo.data[textureOffset + pointOffset + 0] = 0.5f;
+                        ebo.vbo.data[textureOffset + pointOffset + 1] = 0.5f;
                     }
                 }
             }
-            colorOffset += vbo.stride * 3;
-            textureOffset += vbo.stride * 3;
+            colorOffset += ebo.vbo.stride * 3;
+            textureOffset += ebo.vbo.stride * 3;
         }
 
         OBJTexturePacker packer = new OBJTexturePacker(
@@ -123,28 +123,38 @@ public class OBJBuilder {
                 variants
         );
         this.packer = packer;
-        textureOffset = vbo.textureOffset;
+        textureOffset = ebo.vbo.textureOffset;
         for (String materialName : faceMaterials) {
             if (materialName != null) {
                 OBJTexturePacker.UVConverter converter = packer.converters.get(materialName);
                 if (converter != null) {
                     for (int point = 0; point < 3; point++) {
-                        int pointOffset = point * vbo.stride;
-                        vbo.data[textureOffset + pointOffset + 0] = converter.convertU(vbo.data[textureOffset + pointOffset + 0]);
+                        int pointOffset = point * ebo.vbo.stride;
+                        ebo.vbo.data[textureOffset + pointOffset + 0] = converter.convertU(ebo.vbo.data[textureOffset + pointOffset + 0]);
                         // This is where we flip V
-                        vbo.data[textureOffset + pointOffset + 1] = converter.convertV(vbo.data[textureOffset + pointOffset + 1]);
+                        ebo.vbo.data[textureOffset + pointOffset + 1] = converter.convertV(ebo.vbo.data[textureOffset + pointOffset + 1]);
                     }
                 }
             }
-            textureOffset += vbo.stride * 3;
+            textureOffset += ebo.vbo.stride * 3;
         }
         this.textureWidth = packer.getWidth();
         this.textureHeight = packer.getHeight();
         ModCore.debug("Building %s took %sms", modelLoc, (System.currentTimeMillis() - start));
     }
 
+    public float[] getVBOData() {
+        return ebo.vbo.data;
+    }
+    public int[] getEBOData() {
+        return ebo.data;
+    }
+
     public VertexBuffer vertexBufferObject() {
-        return vbo;
+        return ebo.vbo;
+    }
+    public ElementBuffer elementBufferObject() {
+        return ebo;
     }
     public Map<String, Supplier<BufferedImage>> getTextures() {
         return packer != null ? packer.textures : Collections.emptyMap();

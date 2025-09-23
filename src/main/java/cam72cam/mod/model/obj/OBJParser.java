@@ -2,6 +2,7 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.Buffers.*;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.io.*;
 import java.util.*;
@@ -18,6 +19,7 @@ public class OBJParser {
     private final FloatBuffer vertexTextures = new FloatBuffer(1024);
     // 3 ints per vert, 3 verts per face (v1, vt1, vn1, v2, vt2, vn2, v3, vt3, vn3)
     private final IntBuffer faceVerts = new IntBuffer(1024);
+    private final List<String> faces = new ArrayList<>();
     // 1 int per face, which face to use (mtlLookup)
     private final List<String> faceMaterials = new ArrayList<>();
     // List of material files to load as part of this obj
@@ -25,10 +27,14 @@ public class OBJParser {
     // Group -> Face # ranges
     private final List<OBJGroup> groups = new ArrayList<>();
 
+    private final float[] vbo;
+    private final int[] ebo;
+
     private final float scale;
 
     private final List<OBJGroup> correctedGroups;
-    private final VertexBuffer buffer;
+    private VertexBuffer buffer;
+    private final ElementBuffer elementBuffer;
     private final String[] correctedFaceMaterials;
     private boolean smoothShading = false;
 
@@ -121,12 +127,14 @@ public class OBJParser {
         int[] faceVerts = this.faceVerts.array();
         this.correctedFaceMaterials = new String[faceMaterials.size()];
 
+        FloatBuffer vbo = new FloatBuffer(1024);
+        int currentVert = 0;
+        IntBuffer ebo = new IntBuffer(1024);
+        Map<String, Integer> deduplicate = new Object2IntOpenHashMap<>();
+
         this.buffer = new VertexBuffer(faceMaterials.size(), hasNormals);
 
         int faceCount = 0;
-        int vertexOffset = buffer.vertexOffset;
-        int normalOffset = buffer.normalOffset;
-        int textureOffset = buffer.textureOffset;
 
         for (OBJGroup group : groups) {
             int startFace = faceCount;
@@ -136,39 +144,40 @@ public class OBJParser {
             for (int face = group.faceStart; face <= group.faceStop; face++) {
                 correctedFaceMaterials[faceCount] = faceMaterials.get(face);
                 for (int point = 0; point < 3; point++) {
-                    int faceVertexIdx = face * 3 * 3 + point * 3;
-
-                    int vertex = faceVerts[faceVertexIdx+0] * 3;
-                    float x = vertices[vertex+0];
-                    float y = vertices[vertex+1];
-                    float z = vertices[vertex+2];
-                    buffer.data[vertexOffset+0] = x;
-                    buffer.data[vertexOffset+1] = y;
-                    buffer.data[vertexOffset+2] = z;
-                    vertexOffset += buffer.stride;
-
-                    if (!usedVerts[vertex/3]) {
-                        usedVerts[vertex/3] = true;
-                        points.add(new Vec3d(x, y, z));
+                    //Parse vert
+                    int faceVertexIndex = face * 3 + point;
+                    String pointStr = faces.get(faceVertexIndex);
+                    if(!deduplicate.containsKey(pointStr)) {
+                        int[] p = parsePoint(pointStr, 0);
+                        int vert = p[0] * 3;
+                        vbo.add(vertices[vert]);  //x
+                        vbo.add(vertices[vert+1]);//y
+                        vbo.add(vertices[vert+2]);//z
+                        int uv = p[1] * 2;
+                        if (uv >= 0) {
+                            vbo.add(vertexTextures[uv]);    //u
+                            vbo.add(vertexTextures[uv + 1]);//v
+                        } else {
+                            vbo.add(UNSPECIFIED);
+                            vbo.add(UNSPECIFIED);
+                        }
+                        vbo.add(1);//r
+                        vbo.add(1);//g
+                        vbo.add(1);//b
+                        vbo.add(1);//a
+                        if (hasNormals) {
+                            int norm = p[2] * 3;
+                            vbo.add(vertexNormals[norm]);  //nx
+                            vbo.add(vertexNormals[norm+1]);//ny
+                            vbo.add(vertexNormals[norm+2]);//nz
+                        }
+                        deduplicate.put(pointStr, currentVert);
+                        currentVert++;
                     }
-
-                    int texture = faceVerts[faceVertexIdx+1] * 2;
-                    if (texture >= 0) {
-                        buffer.data[textureOffset+0] = vertexTextures[texture+0];
-                        buffer.data[textureOffset+1] = vertexTextures[texture+1];
-                    } else {
-                        buffer.data[textureOffset+0] = UNSPECIFIED;
-                        buffer.data[textureOffset+1] = UNSPECIFIED;
-                    }
-                    textureOffset += buffer.stride;
-
-                    if (hasNormals) {
-                        int normal = faceVerts[faceVertexIdx+2] * 3;
-                        buffer.data[normalOffset+0] = vertexNormals[normal+0];
-                        buffer.data[normalOffset+1] = vertexNormals[normal+1];
-                        buffer.data[normalOffset+2] = vertexNormals[normal+2];
-                        normalOffset += buffer.stride;
-                    }
+                    ebo.add(deduplicate.get(pointStr));
+                    int[] p = parsePoint(pointStr, 0);
+                    int vert = p[0] * 3;
+                    points.add(new Vec3d(vertices[vert], vertices[vert+1], vertices[vert+2]));
                 }
                 faceCount++;
             }
@@ -202,9 +211,16 @@ public class OBJParser {
 
             correctedGroups.add(new OBJGroup(group.name, startFace, faceCount-1, groupMin, groupMax, normal));
         }
+        this.vbo = vbo.array();
+        this.ebo = ebo.array();
+        this.buffer = new VertexBuffer(this.vbo, hasNormals);
+        this.elementBuffer = new ElementBuffer(this.buffer, this.ebo);
     }
-    public VertexBuffer getBuffer() {
+    public VertexBuffer getVertexBuffer() {
         return buffer;
+    }
+    public ElementBuffer getElementBuffer() {
+        return elementBuffer;
     }
     public List<OBJGroup> getGroups() {
         return correctedGroups;
@@ -254,7 +270,27 @@ public class OBJParser {
         parsePoint(a);
         parsePoint(b);
         parsePoint(c);
+        faces.add(a);
+        faces.add(b);
+        faces.add(c);
         faceMaterials.add(currentMaterial);
+    }
+
+    private int[] parsePoint(String point, int i) {
+        String[] sp = point.split("/");
+        int[] res = new int[3];
+        for (int i = 0; i < 3; i++) {
+            if (i < sp.length && !sp[i].equals("")) {
+                res[i] = (Integer.parseInt(sp[i]) - 1);
+            } else {
+                res[i] = (-1);
+                if (i == 2) {
+                    //VN
+                    this.hasNormals = false;
+                }
+            }
+        }
+        return res;
     }
 
     private void parsePoint(String point) {
