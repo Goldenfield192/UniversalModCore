@@ -9,9 +9,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
-import java.nio.FloatBuffer;
 import javax.annotation.Nonnull;
 import java.awt.geom.Rectangle2D;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -234,6 +234,13 @@ public class RenderState {
     public RenderState lightmap(float block, float sky) {
         this.lightmap = new float[] {block, sky};
         return this;
+    }
+    public int getLight() {
+        if(lightmap != null){
+            return (int) (this.lightmap[0] * 240f * 65536 + this.lightmap[1] * 240f);
+        } else {
+            return 15728880;
+        }
     }
     public RenderState blend(BlendMode blend) {
         this.blend = blend;

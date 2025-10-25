@@ -20,6 +20,8 @@ public class RenderContext {
     private RenderContext() {
     }
 
+    public static boolean isBlockPass;
+
     public static With apply(RenderState state) {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();

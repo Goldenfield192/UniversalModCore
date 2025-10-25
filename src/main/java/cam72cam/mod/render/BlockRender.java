@@ -6,6 +6,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -102,6 +103,7 @@ public class BlockRender {
                     }
 
 
+                    RenderContext.isBlockPass = true;
                     RenderType.solid().setupRenderState();
 
                     //TODO bork 1.17.1? RenderHelper.turnBackOn();
@@ -114,6 +116,7 @@ public class BlockRender {
                     }
 
                     RenderType.solid().clearRenderState();
+                    RenderContext.isBlockPass = false;
                 }
 
                 @Override

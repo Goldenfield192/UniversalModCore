@@ -149,6 +149,15 @@ dependencies {
     shade group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
 }
 
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
+dependencies {
+    implementation fg.deobf("cam72cam.immersiverailroading:ImmersiveRailroading:1.17.1-forge-1.10.0-da56426")
+    implementation fg.deobf('trackapi:TrackAPI:1.17.1-forge-1.2')
+}
+
 jar {
     archiveClassifier = 'slim'
     manifest {
