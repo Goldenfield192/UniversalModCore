@@ -17,6 +17,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.atlas.SpriteSource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
@@ -25,6 +27,8 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -91,7 +95,8 @@ public class ClientEvents {
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
-    public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Consumer<ModelEvent.RegisterAdditional>> REGISTER_ADDITIONAL = new Event<>();
+    public static final Event<Consumer<List<SpriteSource>>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
@@ -260,7 +265,12 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void registerModels(ModelEvent.ModifyBakingResult event) {
-            MODEL_BAKE.execute(x -> x.accept(event));
+//            MODEL_BAKE.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerAdditional(ModelEvent.RegisterAdditional event) {
+            REGISTER_ADDITIONAL.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
@@ -273,10 +283,9 @@ public class ClientEvents {
             BlockRender.onPostColorSetup(event.getBlockColors());
         }
 
-        @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent event) {
-            TEXTURE_STITCH.execute(x -> x.accept(event));
-        }
+//        public static void onTextureStitchEvent(ResourceManager manager) {
+//            TEXTURE_STITCH.execute(x -> x.accept(manager));
+//        }
 
         /*@SubscribeEvent(priority = EventPriority.LOW)
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
