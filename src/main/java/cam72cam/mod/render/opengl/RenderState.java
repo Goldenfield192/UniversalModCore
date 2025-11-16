@@ -4,15 +4,14 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.joml.Matrix4f;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
 import javax.annotation.Nonnull;
 import java.awt.geom.Rectangle2D;
-import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 

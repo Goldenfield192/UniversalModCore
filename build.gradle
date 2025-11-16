@@ -17,15 +17,6 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-tasks.named('wrapper', Wrapper).configure {
-    // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
-    // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with
-    // documentation attached on cursor hover of gradle classes and methods. However, this comes with increased
-    // file size for Gradle. If you do switch this to ALL, run the Gradle wrapper task twice afterwards.
-    // (Verify by checking gradle/wrapper/gradle-wrapper.properties to see if distributionUrl now points to `-all`)
-    distributionType = Wrapper.DistributionType.BIN
-}
-
 configurations {
     shade
     implementation.extendsFrom shade
@@ -47,7 +38,7 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
         umcVersion += "-unknown"
     }
 }
-version = "1.20.1-forge-" + umcVersion
+version = "1.20.4-neoforge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
@@ -71,7 +62,7 @@ neoForge {
             client()
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
+//            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
         }
 
         server {
@@ -137,6 +128,7 @@ repositories {
 dependencies {
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
+//    implementation "net.neoforged:neoforge:20.4.251"
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
       
@@ -188,7 +180,6 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
-    finalizedBy 'reobfShadowJar'
 }
 
 assemble.dependsOn shadowJar

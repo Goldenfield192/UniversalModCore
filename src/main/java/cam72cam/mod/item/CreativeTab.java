@@ -1,13 +1,8 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
-import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraftforge.registries.DeferredRegister;
 
 import java.util.ArrayList;
 import java.util.List;

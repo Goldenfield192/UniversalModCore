@@ -2,11 +2,11 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
@@ -17,13 +17,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.*;
-import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.ICancellableEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.*;
+import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
+import net.neoforged.neoforge.event.TickEvent;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -91,7 +91,7 @@ public class ClientEvents {
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
-    public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Consumer<TextureAtlasStitchedEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
@@ -118,10 +118,10 @@ public class ClientEvents {
         }
 
         private static void onGuiMouse(ScreenEvent event, int x, int y, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, event instanceof ScreenEvent.MouseScrolled ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDelta() : 0);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, event instanceof ScreenEvent.MouseScrolled ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDeltaY() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
-                event.setCanceled(true);
+                ((ICancellableEvent)event).setCanceled(true);
                 if (!(event instanceof ScreenEvent.MouseScrolled)) {
                     // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
                     // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
@@ -162,13 +162,13 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onScroll(InputEvent.MouseScrollingEvent event) {
-            if (!SCROLL.executeCancellable(x -> x.apply(event.getScrollDelta()))) {
+            if (!SCROLL.executeCancellable(x -> x.apply(event.getScrollDeltaY()))) {
                 event.setCanceled(true);
             }
         }
 
         @SubscribeEvent
-        public static void onClick(InputEvent.MouseButton event) {
+        public static void onClick(InputEvent.MouseButton.Pre event) {
             if (skipNextMouseInputEvent) {
                 // This is the path from onGuiMouse
                 skipNextMouseInputEvent = false;
@@ -230,11 +230,6 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onSoundLoad(SoundEngineLoadEvent event) {
-            SOUND_LOAD.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
         public static void optifineSucksEvent(RenderLevelStageEvent event) {
             if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
                 OPTIFINE_SUCKS.execute(x -> x.accept(event));
@@ -275,7 +270,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent event) {
+        public static void onTextureStitchEvent(TextureAtlasStitchedEvent event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
         }
 
@@ -287,6 +282,11 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerBindings(RegisterKeyMappingsEvent event) {
             KEY_MAPPING_REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void onSoundLoad(SoundEngineLoadEvent event) {
+            SOUND_LOAD.execute(x -> x.accept(event));
         }
     }
 }
