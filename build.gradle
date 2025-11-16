@@ -1,22 +1,30 @@
 buildscript {
     repositories {
-        maven { url = "https://maven.minecraftforge.net/" }
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        maven { url = 'https://maven.neoforged.net/releases' }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
+        classpath "net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:2.0.116"
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
     }
 }
 
-apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'net.neoforged.moddev'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 
+tasks.named('wrapper', Wrapper).configure {
+    // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
+    // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with
+    // documentation attached on cursor hover of gradle classes and methods. However, this comes with increased
+    // file size for Gradle. If you do switch this to ALL, run the Gradle wrapper task twice afterwards.
+    // (Verify by checking gradle/wrapper/gradle-wrapper.properties to see if distributionUrl now points to `-all`)
+    distributionType = Wrapper.DistributionType.BIN
+}
 
 configurations {
     shade
@@ -45,80 +53,88 @@ archivesBaseName = "UniversalModCore"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
-minecraft {
-    // The mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   Snapshot are built nightly.
-    // stable_#            Stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'official', version: '1.20.1'
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+neoForge {
+    version = "20.4.251"
+
+    parchment {
+        mappingsVersion = "2024.04.14"
+        minecraftVersion = "1.20.4"
+    }
+
+    accessTransformers.from ('src/main/resources/META-INF/accesstransformer.cfg')
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
-            workingDirectory project.file('run')
+            client()
 
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                universalmodcore {
-                    source sourceSets.main
-                }
-            }
+            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
         }
 
         server {
-            workingDirectory project.file('run')
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
+        }
 
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                universalmodcore {
-                    source sourceSets.main
-                }
-            }
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
         }
 
         data {
-            workingDirectory project.file('run')
+            data()
 
+            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+            // gameDirectory = project.file('run-data')
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', "universalmodcore", '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        configureEach {
             // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'REGISTRIES'
+            // The markers can be added/remove as needed separated by commas.
+            // "SCAN": For mods scan.
+            // "REGISTRIES": For firing of registry events.
+            // "REGISTRYDUMP": For getting the contents of all registries.
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
 
             // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-
-            args '--mod', 'universalmodcore', '--all', '--output', file('src/generated/resources/')
-
-            mods {
-                universalmodcore {
-                    source sourceSets.main
-                }
-            }
+            // You can set various levels here.
+            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+            logLevel = org.slf4j.event.Level.DEBUG
         }
     }
+    mods {
+        "universalmodcore" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// Sets up a dependency configuration called 'localRuntime'.
+// This configuration should be used instead of 'runtimeOnly' to declare
+// a dependency that will be present for runtime testing but that is
+// "optional", meaning it will not be pulled by dependents of this mod.
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
 }
 
 repositories {
     mavenCentral()
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.4.0'
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -143,9 +159,12 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    minecraftLibrary group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    minecraftLibrary group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
+    implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    additionalRuntimeClasspath group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+
+    implementation group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
+    additionalRuntimeClasspath group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
     shade group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
 }
 
@@ -173,10 +192,6 @@ shadowJar {
 }
 
 assemble.dependsOn shadowJar
-
-reobf {
-    shadowJar {}
-}
 
 test {
     useJUnit()
