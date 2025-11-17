@@ -62,7 +62,7 @@ neoForge {
             client()
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-//            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
+            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
         }
 
         server {
@@ -89,6 +89,11 @@ neoForge {
             programArguments.addAll '--mod', "universalmodcore", '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
+//        junit {
+//            type = "client"
+//            systemProperty 'neoforge.enabledGameTestNamespaces', "universalmodcore"
+//        }
+
         configureEach {
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.
@@ -108,6 +113,16 @@ neoForge {
             sourceSet(sourceSets.main)
         }
     }
+//    unitTest {
+//        // Enable JUnit support in the moddev plugin
+//        enable()
+//        // Configure which mod is being tested.
+//        // This allows NeoForge to load the test/ classes and resources as belonging to the mod.
+//        testedMod = mods."universalmodcore" // <mod name> must match the name in the mods { } block.
+//        // Configure which mods are loaded in the test environment, if the default (all declared mods) is not appropriate.
+//        // This must contain testedMod, and can include other mods as well.
+//        // loadedMods = [mods.<mod name >, mods.<mod name 2>]
+//    }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -128,7 +143,7 @@ repositories {
 dependencies {
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
-//    implementation "net.neoforged:neoforge:20.4.251"
+    implementation "net.neoforged:neoforge:20.4.251"
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
       
@@ -149,7 +164,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     //testImplementation ('junit:junit:4.13')
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     additionalRuntimeClasspath group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
@@ -184,10 +200,10 @@ shadowJar {
 
 assemble.dependsOn shadowJar
 
-test {
-    useJUnit()
-    maxHeapSize = '1G'
-}
+//test {
+//    useJUnitPlatform()
+//    maxHeapSize = '1G'
+//}
 
 publishing {
     publications {
