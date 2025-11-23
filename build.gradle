@@ -135,15 +135,10 @@ configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
 
-repositories {
-    mavenCentral()
-}
-
-
 dependencies {
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
-    implementation "net.neoforged:neoforge:20.4.251"
+//    implementation "net.neoforged:neoforge:20.4.251"
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
       
