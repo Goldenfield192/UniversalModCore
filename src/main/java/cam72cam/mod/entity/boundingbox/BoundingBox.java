@@ -2,6 +2,7 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.shapes.VoxelShape;
 
 import java.util.Optional;
 

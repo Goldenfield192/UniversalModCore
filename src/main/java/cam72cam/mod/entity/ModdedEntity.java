@@ -348,30 +348,42 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         cam72cam.mod.entity.Entity passenger = seat.getEntityPassenger();
-        if (passenger != null) {
-            Vec3d offset = passengerPositions.get(passenger.getUUID());
-            // Weird case around player joining with a different UUID during debugging
+
+        if (passenger == null) return;
+
+        Vec3d offset = passengerPositions.get(passenger.getUUID());
+        if (!world.isRemote) {
             if (offset == null) {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
-                passengerPositions.put(passenger.getUUID(), offset);
             }
-
             offset = iRidable.onPassengerUpdate(passenger, offset);
             if (!seat.isPassenger(passenger.internal)) {
                 return;
             }
-
             passengerPositions.put(passenger.getUUID(), offset);
+        }
 
-            Vec3d pos = calculatePassengerPosition(offset);
+        if (offset == null) return;
 
-            passenger.setPosition(pos);
-            passenger.setVelocity(new Vec3d(getMotion()));
+        Vec3d pos = calculatePassengerPosition(offset);
+        Vec3d motion = new Vec3d(getMotion());
 
-            float delta = rotationYaw - prevRotationYaw;
-            passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+        if (seat.getEntityId() < passenger.internal.getEntityId()) {
+            pos = pos.add(motion);
+        }
 
-            seat.shouldSit = iRidable.shouldRiderSit(passenger);
+        passenger.setPosition(pos);
+        if (!world.isRemote) {
+            passenger.setVelocity(motion);
+        }
+
+        float delta = rotationYaw - prevRotationYaw;
+        passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+
+        seat.shouldSit = iRidable.shouldRiderSit(passenger);
+
+        if (!world.isRemote) {
+            new PassengerPositionsPacket(this).sendToObserving(self);
         }
     }
 
@@ -385,6 +397,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             SeatEntity seat = (SeatEntity) entity.internal.getRidingEntity();
             this.seats.remove(seat);
             seat.moveTo(other.internal);
+            seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
             other.internal.seats.add(seat);
             other.internal.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
@@ -444,6 +457,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* ICollision NOTE: set width/height if implementing LivingEntity */
     /** @see #getEntityBoundingBox() */
+    //Hint: See net.minecraft.entity.Entity.collideBoundingBoxHeuristically
+    //TODO CollisionBox fix
     @Override
     public AxisAlignedBB getCollisionBoundingBox() {
         return getBoundingBox();

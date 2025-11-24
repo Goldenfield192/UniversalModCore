@@ -107,7 +107,7 @@ minecraft {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.14.4-28.2.26'
+    minecraft 'net.minecraftforge:forge:1.14.4-28.2.25'
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -133,6 +133,17 @@ dependencies {
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
 
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+    maven {
+        url "https://cursemaven.com"
+    }
+}
+
+dependencies {
+    implementation fg.deobf("cam72cam.immersiverailroading:ImmersiveRailroading:1.14.4-forge-1.10.0-da56426")
+    implementation fg.deobf('trackapi:TrackAPI:1.14.4-forge-1.2')
+}
 jar {
     manifest {
         attributes([
