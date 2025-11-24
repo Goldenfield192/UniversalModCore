@@ -216,6 +216,7 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
+    relocate 'com.llamalad7.mixinextras', "${project.group}.shade.mixinextras"
     finalizedBy 'reobfShadowJar'
 }
 
