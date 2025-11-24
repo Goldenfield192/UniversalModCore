@@ -6,6 +6,8 @@
   "minVersion": "0.7",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "fix.entity_data_migration.MixinChunkStorage",
+    "fix.large_entity_collision.MixinEntitySectionStorage"
   ],
   "client": [
     "fix.altas_loader.MixinSpriteResourceLoader"
