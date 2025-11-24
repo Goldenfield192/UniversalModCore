@@ -4,10 +4,12 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -16,6 +18,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
 
 
 configurations {
@@ -119,6 +122,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.0'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -142,11 +147,53 @@ dependencies {
 
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
-
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
+        jarJar.ranged(it, "[0.5.0,)")
+    }
     minecraftLibrary group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     minecraftLibrary group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
     shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     shade group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
+}
+
+mixin {
+    // Refmaps for each SourceSet
+    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+
+    // Configs to add to runs and jars
+    config 'mixins.universalmodcore.json'
+
+    // Specify options for dev run configs
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
+}
+
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+    flatDir {
+        dir "libs"
+    }
+    maven {
+        url "https://cursemaven.com"
+    }
+}
+
+dependencies {
+    implementation fg.deobf("cam72cam.immersiverailroading:ImmersiveRailroading:1.20.1-forge-1.10.0-da56426")
+    implementation fg.deobf('trackapi:TrackAPI:1.20.1-forge-1.2')
+    implementation fg.deobf("curse.maven:simple-clouds-1121215:6928978")
+    implementation fg.deobf("curse.maven:distant-horizons-508933:7104610")
+    implementation fg.deobf("curse.maven:rubidium-574856:4952685")
+}
+
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
+    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
+    finalizedBy 'reobfShadowJar'
 }
 
 jar {
