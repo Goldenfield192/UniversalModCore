@@ -125,6 +125,9 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
     shade("io.github.llamalad7:mixinextras-common:0.5.0")
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
+        jarJar.ranged(it, "[0.5.0,)")
+    }
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -190,7 +193,6 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
-    relocate 'com.llamalad7.mixinextras', "${project.group}.shade.mixinextras"
     mergeServiceFiles()
     finalizedBy 'reobfShadowJar'
 }
