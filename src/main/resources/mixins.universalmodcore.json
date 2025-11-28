@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "plugin": "cam72cam.mod.UMCMixinLoader",
+  "package": "cam72cam.mod.mixin",
+  "refmap": "mixins.universalmodcore.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8.5",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "fix.entity_data_migration.MixinChunkStorage",
+    "fix.large_entity_collision.MixinEntitySectionStorage"
+  ],
+  "client": [
+    "fix.block_replacement.MixinBlockStatePredictionHandler",
+    "fix.block_replacement.MixinClientLevel",
+    "fix.altas_loader.MixinSpriteResourceLoader"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
