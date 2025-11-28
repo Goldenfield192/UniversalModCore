@@ -18,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
@@ -26,6 +27,9 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -283,6 +287,13 @@ public class ClientEvents {
         /*@SubscribeEvent(priority = EventPriority.LOW)
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             //REGISTER_ENTITY.execute(Runnable::run);
+        }*/
+
+        /*@SubscribeEvent
+        public static void buildContents(CreativeModeTabEvent.Register event) {
+            List<Object> after = new ArrayList<>();
+            after.add(CreativeModeTabs.SPAWN_EGGS);
+            CREATIVE_TAB.execute(x -> x.accept(event, after));
         }*/
 
         @SubscribeEvent
