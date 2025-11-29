@@ -88,6 +88,7 @@ public class ModCore {
     }
 
     /** Called during Mod Construction phase */
+    @SuppressWarnings("removal")
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;

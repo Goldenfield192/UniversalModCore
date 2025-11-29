@@ -155,14 +155,11 @@ dependencies {
 
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
-    
-    minecraftLibrary(group: 'org.lz4', name: 'lz4-java', version: '1.8.0')
-    minecraftLibrary(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
 
-    implementation(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
+    minecraftLibrary(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
         jarJar.ranged(it, "[1.5.2,)")
     })
-    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
+    minecraftLibrary(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
         jarJar.ranged(it, "[1.8.0,)")
     })
 }
@@ -188,16 +185,25 @@ repositories {
     maven {
         url "https://cursemaven.com"
     }
+    maven {
+        name = 'GTCEu Maven'
+        url = 'https://maven.gtceu.com'
+        content {
+            includeGroup 'com.gregtechceu.gtceu'
+        }
+    }
 }
 
 dependencies {
     implementation fg.deobf("cam72cam.immersiverailroading:ImmersiveRailroading:1.20.1-forge-1.10.0-da56426")
     implementation fg.deobf('trackapi:TrackAPI:1.20.1-forge-1.2')
-    implementation fg.deobf("curse.maven:simple-clouds-1121215:6928978")
-    implementation fg.deobf("curse.maven:distant-horizons-508933:7104610")
-    implementation fg.deobf("curse.maven:rubidium-574856:4952685")
-    implementation fg.deobf("curse.maven:chisels-bits-231095:5203366")
-    implementation fg.deobf("curse.maven:framedblocks-441647:6685443")
+    // Forge (see below block as well if you use Forge Gradle)
+//    implementation fg.deobf("curse.maven:gregtechceu-modern-890405:7262157")
+//    implementation fg.deobf("curse.maven:simple-clouds-1121215:6928978")
+//    implementation fg.deobf("curse.maven:distant-horizons-508933:7104610")
+//    implementation fg.deobf("curse.maven:rubidium-574856:4952685")
+//    implementation fg.deobf("curse.maven:chisels-bits-231095:5203366")
+//    implementation fg.deobf("curse.maven:framedblocks-441647:6685443")
 }
 
 //shadowJar {
