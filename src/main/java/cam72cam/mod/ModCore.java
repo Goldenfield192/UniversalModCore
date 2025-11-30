@@ -229,10 +229,8 @@ public class ModCore {
             }
 
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
-                RenderSystem.recordRenderCall(() -> {
-                        MaxTextureSize = GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE);
-                        ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
-                });
+                MaxTextureSize = RenderSystem.maxSupportedTextureSize();
+                ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
             }
         }
 

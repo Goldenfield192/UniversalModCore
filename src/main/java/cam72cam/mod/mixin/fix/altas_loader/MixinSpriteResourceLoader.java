@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Trigger sprite load event identical to net.minecraftforge.client.event.TextureStitchEvent.Pre which was removed
  */
-@Mixin(SpriteResourceLoader.class)
+@Mixin(value = SpriteResourceLoader.class, priority = 1999)
 public class MixinSpriteResourceLoader {
     @Inject(method = "load", at = @At("RETURN"))
     private static void inject(ResourceManager manager, ResourceLocation p_261709_, CallbackInfoReturnable<SpriteResourceLoader> cir,
