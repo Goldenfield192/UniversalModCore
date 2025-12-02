@@ -11,9 +11,10 @@
     "fix.large_entity_collision.MixinEntitySectionStorage"
   ],
   "client": [
+    "fix.MixinLevelRenderer",
+    "fix.altas_loader.MixinSpriteResourceLoader",
     "fix.block_replacement.MixinBlockStatePredictionHandler",
-    "fix.block_replacement.MixinClientLevel",
-    "fix.altas_loader.MixinSpriteResourceLoader"
+    "fix.block_replacement.MixinClientLevel"
   ],
   "injectors": {
     "defaultRequire": 1

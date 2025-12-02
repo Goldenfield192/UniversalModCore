@@ -10,6 +10,7 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
@@ -17,6 +18,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -38,7 +40,7 @@ import java.util.List;
 /** Global Render Registry and helper functions */
 public class GlobalRender {
     // Fire these off every tick
-    private static List<RenderFunction> renderFuncs = new ArrayList<>();
+    public static List<RenderFunction> renderFuncs = new ArrayList<>();
 
     // This is required before new GRH()
     static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<>(GlobalRenderHelper::new, new HashSet<>(), null) {
@@ -49,7 +51,7 @@ public class GlobalRender {
     };
 
     // Internal hack
-    private static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
+    public static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
@@ -65,8 +67,10 @@ public class GlobalRender {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
                         // TODO 1.15+ do we need to set lightmap coords here?
-                        BlockPos off = te.getBlockPos();
-                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
+//                        RenderType.cutoutMipped().setupRenderState();
+//                        BlockPos off = te.getBlockPos();
+//                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
+//                        RenderType.cutoutMipped().clearRenderState();
                     }
 
                     @Override
@@ -80,7 +84,7 @@ public class GlobalRender {
             }
         });
         ClientEvents.TICK.subscribe(() -> {
-            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
+//            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
             /* TODO 1.17.1
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
                 grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));

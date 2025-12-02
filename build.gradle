@@ -195,10 +195,10 @@ repositories {
 }
 
 dependencies {
-    implementation fg.deobf("cam72cam.immersiverailroading:ImmersiveRailroading:1.20.1-forge-1.10.0-da56426")
+    implementation fg.deobf("a:ir:e")
     implementation fg.deobf('trackapi:TrackAPI:1.20.1-forge-1.2')
     // Forge (see below block as well if you use Forge Gradle)
-//    implementation fg.deobf("curse.maven:gregtechceu-modern-890405:7262157")
+    implementation fg.deobf("curse.maven:gregtechceu-modern-890405:7262157")
 //    implementation fg.deobf("curse.maven:simple-clouds-1121215:6928978")
 //    implementation fg.deobf("curse.maven:distant-horizons-508933:7104610")
 //    implementation fg.deobf("curse.maven:rubidium-574856:4952685")
