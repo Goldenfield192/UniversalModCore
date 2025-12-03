@@ -12,7 +12,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Collection;
 
 
 /**
@@ -33,12 +36,44 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
     @Final
     private Long2ObjectMap<EntitySection<T>> sections;
 
+//    @ModifyArg(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;posToSectionCoord(D)I", ordinal = 0))
+//    private  double mod0(double p_175553_) {
+//        return p_175553_ - 32;
+//    }
+//
+//    @ModifyArg(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;posToSectionCoord(D)I", ordinal = 1))
+//    private  double mod1(double p_175553_) {
+//        return p_175553_ - 16;
+//    }
+//
+//    @ModifyArg(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;posToSectionCoord(D)I", ordinal = 2))
+//    private  double mod2(double p_175553_) {
+//        return p_175553_ - 32;
+//    }
+//
+//    @ModifyArg(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;posToSectionCoord(D)I", ordinal = 3))
+//    private  double mod3(double p_175553_) {
+//        return p_175553_ + 32;
+//    }
+//
+//    @ModifyArg(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;posToSectionCoord(D)I", ordinal = 4))
+//    private  double mod4(double p_175553_) {
+//        return p_175553_ + 16;
+//    }
+//
+//    @ModifyArg(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;posToSectionCoord(D)I", ordinal = 5))
+//    private  double mod5(double p_175553_) {
+//        return p_175553_ + 32;
+//    }
+
     @Inject(method = "forEachAccessibleNonEmptySection", at = @At("RETURN"))
     public void inject(AABB p_188363_, AbortableIterationConsumer<EntitySection<T>> p_261588_, CallbackInfo ci) {
         this.sections.values().stream()
                      .filter(e -> e.getStatus().isAccessible())
-                     .filter(e -> e.getEntities().anyMatch(entity -> entity.getClass().equals(ModdedEntity.class)
-                             && entity.getBoundingBox().intersects(p_188363_)))
+                     .filter(e -> {
+                         Collection<ModdedEntity> moddedEntities = e.storage.find(ModdedEntity.class);
+                         return !moddedEntities.isEmpty() && moddedEntities.stream().anyMatch(en -> en.getBoundingBox().intersects(p_188363_));
+                     })
                      .forEach(p_261588_::accept);
     }
 }

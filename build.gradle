@@ -162,6 +162,7 @@ dependencies {
     minecraftLibrary(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
         jarJar.ranged(it, "[1.8.0,)")
     })
+    implementation fg.deobf("curse.maven:spark-361579:4587309")
 }
 
 mixin {
