@@ -77,6 +77,8 @@ public class World {
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
 
+    public final UMCEntityManager tracker = new UMCEntityManager();
+
     /* World Initialization */
 
     private World(Level world) {

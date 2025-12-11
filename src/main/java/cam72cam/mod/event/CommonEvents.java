@@ -1,6 +1,8 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.world.World;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -12,7 +14,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
@@ -111,6 +115,23 @@ public class CommonEvents {
         public static void onEntityJoin(EntityJoinLevelEvent event) {
             if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.getLevel(), event.getEntity()))) {
                 event.setCanceled(true);
+            } else {
+                if (event.getEntity() instanceof ModdedEntity moddedEntity) {
+                    cam72cam.mod.world.World.get(event.getEntity().level()).tracker.join(moddedEntity);
+                }
+            }
+        }
+        @SubscribeEvent
+        public static void onEntityLeave(EntityLeaveLevelEvent event) {
+            if (event.getEntity() instanceof ModdedEntity moddedEntity) {
+                cam72cam.mod.world.World.get(event.getEntity().level()).tracker.remove(moddedEntity);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onEntityTransfer(EntityEvent.EnteringSection event) {
+            if (event.getEntity() instanceof ModdedEntity moddedEntity) {
+                cam72cam.mod.world.World.get(moddedEntity.level()).tracker.move(event);
             }
         }
 
