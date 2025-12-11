@@ -1,3 +1,5 @@
+//AI Generated
+
 package cam72cam.mod.world;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
