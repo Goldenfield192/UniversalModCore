@@ -46,10 +46,6 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
     @Final
     private Long2ObjectMap<EntitySection<T>> sections;
 
-    @Shadow
-    @Final
-    private LongSortedSet sectionIds;
-
     @Inject(method = "forEachAccessibleNonEmptySection", at = @At("HEAD"))
     public void init(AABB p_188363_, AbortableIterationConsumer<EntitySection<T>> p_261588_, CallbackInfo ci,
                      @Share("level")LocalRef<UMCEntityManager> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef) {
@@ -64,7 +60,7 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
     }
 
     @Inject(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE_ASSIGN", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;get(J)Ljava/lang/Object;",
-            shift = At.Shift.BY, by = 2)) //To capture the EntitySection
+            shift = At.Shift.BY, by = 2), remap = false) //To capture the EntitySection
     public void capture(AABB p_188363_, AbortableIterationConsumer<EntitySection<T>> p_261588_, CallbackInfo ci,
                         @Share("level")LocalRef<UMCEntityManager> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef,
                         @Local LocalRef<EntitySection<T>> sectionLocalRef, @Local(ordinal = 2) long k2) {
@@ -81,9 +77,9 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
         @Share("level")LocalRef<UMCEntityManager> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef) {
         if (levelLocalRef.get() != null) {
             for (long l1 : setLocalRef.get()) {
-                if(!sectionIds.contains(l1)) {
+                if(sections.containsKey(l1)) {
                     EntitySection<T> tEntitySection = sections.get(l1);
-                    if (tEntitySection != null && !tEntitySection.getStatus().isAccessible() && !tEntitySection.isEmpty()) {
+                    if (tEntitySection != null && tEntitySection.getStatus().isAccessible() && !tEntitySection.isEmpty()) {
                         p_261588_.accept(tEntitySection);
                     }
                 }

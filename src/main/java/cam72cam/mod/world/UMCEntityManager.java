@@ -19,22 +19,22 @@ public class UMCEntityManager {
 
     public void join(ModdedEntity entity) {
         Vec3 vec3d = entity.getEyePosition();
-        int x = (int) vec3d.x;
-        int y = (int) vec3d.y;
-        int z = (int) vec3d.z;
-        long sec = SectionPos.asLong(x, y, z);
+        long pos = SectionPos.asLong(entity.blockPosition());
+        int x = SectionPos.x(pos);
+        int y = SectionPos.y(pos);
+        int z = SectionPos.z(pos);
         synchronized (this) {
-            Set<ModdedEntity> moddedEntities = entitySections.get(sec);
+            Set<ModdedEntity> moddedEntities = entitySections.get(pos);
             if (moddedEntities == null) {
                 //Newly added
                 moddedEntities = new ObjectArraySet<>();
-                entitySections.put(sec, moddedEntities);
+                entitySections.put(pos, moddedEntities);
 
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS; i <= x + HORIZONTAL_SEARCH_RADIUS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS; j <= z + HORIZONTAL_SEARCH_RADIUS; j++) {
                         for (int k = y - VERTICAL_SEARCH_RADIUS; k <= y + VERTICAL_SEARCH_RADIUS; k++) {
-                            scanningRange.put(sec, SectionPos.asLong(i, k, j));
+                            scanningRange.put(pos, SectionPos.asLong(i, k, j));
                         }
                     }
                 }
