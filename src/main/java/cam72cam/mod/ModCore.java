@@ -38,6 +38,8 @@ import org.lwjgl.opengl.GL11;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -153,6 +155,17 @@ public class ModCore {
         public Proxy() {
             proxy = this;
             ModCore.register(new Internal());
+
+            try {
+                for (String className : UMCMixinPlugin.UMC_classes) {
+                    Class<?> aClass = getClass().getClassLoader().loadClass(className);
+                    Constructor<?> declaredConstructor = aClass.getDeclaredConstructor();
+                    ModCore.register((ModCore.Mod) declaredConstructor.newInstance());
+                }
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         public void event(ModEvent event) {
