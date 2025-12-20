@@ -128,10 +128,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
-        jarJar.ranged(it, "[0.5.0,)")
-    }
+    minecraftLibrary(shade(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")))
+    minecraftLibrary(shade("io.github.llamalad7:mixinextras-forge:0.5.0"))
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -156,12 +154,11 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    minecraftLibrary(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
-        jarJar.ranged(it, "[1.5.2,)")
-    })
-    minecraftLibrary(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
-        jarJar.ranged(it, "[1.8.0,)")
-    })
+//    minecraftLibrary(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
+//        jarJar.ranged(it, "[1.5.2,)")
+//    })
+    minecraftLibrary(shade(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'))
+    minecraftLibrary(shade(group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'))
     implementation fg.deobf("curse.maven:spark-361579:4587309")
 }
 
@@ -207,14 +204,15 @@ dependencies {
 //    implementation fg.deobf("curse.maven:framedblocks-441647:6685443")
 }
 
-//shadowJar {
-//    archiveClassifier = ''
-//    configurations = [project.configurations.shade]
-//    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
-//    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
-//    mergeServiceFiles()
-//    finalizedBy 'reobfShadowJar'
-//}
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
+    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
+    mergeServiceFiles()
+    finalizedBy 'reobfShadowJar'
+}
 
 jar {
     archiveClassifier = 'slim'
@@ -258,6 +256,7 @@ tasks.jarJar.finalizedBy('reobfJarJar')
 
 reobf {
     jarJar {}
+    shadowJar {}
 }
 
 test {
