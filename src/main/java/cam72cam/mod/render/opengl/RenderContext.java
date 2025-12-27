@@ -23,6 +23,8 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 public class RenderContext {
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
+    //Modified from block, fix fog
+    public static ShaderInstance UMC_BLOCK;
 
     public static float lastLightX;
     public static float lastLightY;

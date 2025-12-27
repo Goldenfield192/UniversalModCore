@@ -164,6 +164,17 @@ dependencies {
     minecraftLibrary(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
+dependencies {
+    implementation fg.deobf('cam72cam.immersiverailroading:ImmersiveRailroading:1.18.2-forge-1.10.0-d89c447')
+    implementation fg.deobf('trackapi:TrackAPI:1.18.2-forge-1.2')
+    implementation fg.deobf("curse.maven:embeddium-908741:5322305")
+    implementation fg.deobf("curse.maven:oculus-581495:4578744")
+}
+
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 
