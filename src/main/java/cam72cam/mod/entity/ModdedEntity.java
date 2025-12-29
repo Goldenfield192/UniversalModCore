@@ -8,6 +8,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -240,6 +241,20 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPos(getX(), getY(), getZ()));
+            //Clear passengerPositions entries
+            //For some reason we have them persist even after dismount
+            ObjectArraySet<UUID> set = new ObjectArraySet<>();
+            passengerPositions.forEach(((k, v) -> {
+                if (seats.stream().noneMatch(seatEntity ->
+                                                     seatEntity.getEntityPassenger() != null
+                                                             && seatEntity.getEntityPassenger().getUUID().equals(k))) {
+                    set.add(k);
+                }
+            }));
+            set.forEach(passengerPositions::remove);
+        } else {
+            //A fast fallback
+            passengerPositions.clear();
         }
     }
 
