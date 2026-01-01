@@ -17,6 +17,7 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Transformation;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -44,6 +45,8 @@ import org.lwjgl.opengl.GL12;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
@@ -69,7 +72,15 @@ public class ItemRender {
             Map<ResourceLocation, BakedModel> models = event.getModels();
             ModelResourceLocation location = new ModelResourceLocation(item.getRegistryName().internal, "");
             Material mat = new Material(InventoryMenu.BLOCK_ATLAS, tex.internal);
-            ItemLayerModel model = new ItemLayerModel(ImmutableList.of(mat), new Int2ObjectArrayMap<>(), new Int2ObjectArrayMap<>());
+            ItemLayerModel model;
+            try {
+                Constructor constructor = ItemLayerModel.class.getDeclaredConstructor(ImmutableList.class, Int2ObjectMap.class, Int2ObjectMap.class);
+                constructor.setAccessible(true);
+                model = (ItemLayerModel) constructor.newInstance(ImmutableList.of(mat), new Int2ObjectArrayMap<>(), new Int2ObjectArrayMap<>());
+            } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                     IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
             event.getModels().put(location, model.bake(new IGeometryBakingContext(){
                 @Override
                 public String getModelName() {
