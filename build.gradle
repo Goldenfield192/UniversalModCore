@@ -160,7 +160,8 @@ dependencies {
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 
-    config 'mixins.universalmodcore.json'
+    config 'mixins.feat.universalmodcore.json'
+    config 'mixins.fix.universalmodcore.json'
 
     //Dev environment setup
     debug.verbose = true
@@ -181,6 +182,18 @@ jar {
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
+}
+
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+    maven {
+        url "https://cursemaven.com"
+    }
+}
+
+dependencies {
+    implementation fg.deobf(files('D:\\cache\\.gradle\\caches\\forge_gradle\\deobf_dependencies\\cam72cam\\immersiverailroading\\ImmersiveRailroading\\1.14.4-forge-1.10.0-a14ad67_mapped_stable_58-1.14.4\\ImmersiveRailroading-1.14.4-forge-1.10.0-a14ad67_mapped_stable_58-1.14.4.jar'))
+    implementation fg.deobf('trackapi:TrackAPI:1.14.4-forge-1.2')
 }
 
 jar.finalizedBy('reobfJar')

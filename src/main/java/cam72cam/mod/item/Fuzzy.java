@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.event.CommonEvents;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.data.DataGenerator;
@@ -172,6 +173,7 @@ public class Fuzzy {
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
         customItems.add(item);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), item));
         return this;
     }
 
@@ -183,6 +185,7 @@ public class Fuzzy {
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
         includes.add(other);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), other.tag));
         return this;
     }
 
