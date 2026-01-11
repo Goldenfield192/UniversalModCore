@@ -8,6 +8,7 @@ import cam72cam.mod.entity.sync.TagSync;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.mixin.accessor.AWorld;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
@@ -387,10 +388,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-        //TODO 1.14.4 Could this cause further bug? If so how to fix? If not should this be backported to 1.12?
-//        if (this.getEntityId() < passenger.internal.getEntityId()) {
-//            pos = pos.add(motion);
-//        }
+        if (!AWorld.getTicked(seat.world).contains(passenger.internal.getEntityId())) {
+            //If seat is ticked before passenger, add an offset here
+            pos = pos.add(motion);
+        }
         passenger.setPosition(pos);
         if (!world.isRemote) {
             passenger.setVelocity(motion);

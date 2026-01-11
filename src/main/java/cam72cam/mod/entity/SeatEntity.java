@@ -155,15 +155,23 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         return 0;
     }
 
+    @Override
+    public void updatePassenger(Entity p_184232_1_) {
+        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        if (linked != null && linked.internal instanceof ModdedEntity) {
+            ((ModdedEntity) linked.internal).updateSeat(this);
+        }
+    }
+
     int lastUpdateTick = -1;
     //@Override
     public final void updatePassengerPreTick(net.minecraft.entity.Entity passenger) {
         if (lastUpdateTick != this.ticks) {
             lastUpdateTick = this.ticks;
-            cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
-            if (linked != null && linked.internal instanceof ModdedEntity) {
-                ((ModdedEntity) linked.internal).updateSeat(this);
-            }
+//            cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+//            if (linked != null && linked.internal instanceof ModdedEntity) {
+//                ((ModdedEntity) linked.internal).updateSeat(this);
+//            }
         }
     }
 

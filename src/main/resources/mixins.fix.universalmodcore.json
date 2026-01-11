@@ -7,8 +7,10 @@
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1301,
   "mixins": [
+    "check_entity_ticking_order.MixinServerWorld",
     "custom_bb_collision.MixinVoxelShapes"
   ],
   "client": [
+    "check_entity_ticking_order.MixinClientWorld"
   ]
 }
