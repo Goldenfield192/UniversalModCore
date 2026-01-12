@@ -388,7 +388,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-        if (!AWorld.getTicked(seat.world).contains(passenger.internal.getEntityId())) {
+        if (AWorld.getTicked(seat.world).contains(passenger.internal.getEntityId())) {
             //If seat is ticked before passenger, add an offset here
             pos = pos.add(motion);
         }

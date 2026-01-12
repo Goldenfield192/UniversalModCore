@@ -2,6 +2,7 @@ package cam72cam.mod.mixin.fix.check_entity_ticking_order;
 
 import cam72cam.mod.mixin.accessor.AWorld;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import net.minecraft.client.world.ClientWorld;
@@ -15,7 +16,7 @@ import java.util.Set;
 
 @Mixin(ClientWorld.class)
 public class MixinClientWorld implements AWorld {
-    private static ThreadLocal<Set<Integer>> tickedEntities;
+    private static ThreadLocal<Set<Integer>> tickedEntities = new ThreadLocal<>();
 
     @Override
     public Set<Integer> tickedEntities() {
@@ -27,9 +28,9 @@ public class MixinClientWorld implements AWorld {
         tickedEntities.set(new IntAVLTreeSet());
     }
 
-    @Inject(method = "tickEntities", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/ints/Int2ObjectMap$Entry;getValue()Ljava/lang/Object;"))
-    public void capture(CallbackInfo ci, @Local Int2ObjectMap.Entry<Entity> entry) {
-        tickedEntities.get().add(entry.getIntKey());
+    @Inject(method = "tickEntities", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/ints/Int2ObjectMap$Entry;getValue()Ljava/lang/Object;", remap = false))
+    public void capture(CallbackInfo ci, @Local LocalRef<Int2ObjectMap.Entry<Entity>> entry) {
+        tickedEntities.get().add(entry.get().getIntKey());
     }
 
     @Inject(method = "tickEntities", at = @At(value = "RETURN"))

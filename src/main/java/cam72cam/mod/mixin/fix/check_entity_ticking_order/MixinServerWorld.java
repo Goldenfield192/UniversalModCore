@@ -18,7 +18,7 @@ import java.util.function.BooleanSupplier;
 //TODO 1.14.4 entity ticking order are messed up, capture here and expose by ThreadLocal
 @Mixin(ServerWorld.class)
 public class MixinServerWorld implements AWorld {
-    private static ThreadLocal<Set<Integer>> tickedEntities;
+    private static ThreadLocal<Set<Integer>> tickedEntities = new ThreadLocal<>();
 
     @Override
     public Set<Integer> tickedEntities() {
@@ -31,8 +31,8 @@ public class MixinServerWorld implements AWorld {
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/ints/Int2ObjectMap$Entry;getValue()Ljava/lang/Object;"))
-    public void capture(BooleanSupplier p_72835_1_, CallbackInfo ci, @Local Int2ObjectMap.Entry<Entity> entry) {
-        tickedEntities.get().add(entry.getIntKey());
+    public void capture(BooleanSupplier p_72835_1_, CallbackInfo ci, @Local LocalRef<Int2ObjectMap.Entry<Entity>> entry) {
+        tickedEntities.get().add(entry.get().getIntKey());
     }
 
     @Inject(method = "tick", at = @At(value = "RETURN"))
