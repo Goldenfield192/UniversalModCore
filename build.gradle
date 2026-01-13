@@ -206,6 +206,16 @@ shadowJar {
     finalizedBy 'reobfShadowJar'
 }
 
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
+dependencies {
+    implementation fg.deobf('cam72cam.immersiverailroading:ImmersiveRailroading:1.20.1-forge-1.10.0-d89c447')
+    implementation fg.deobf('trackapi:TrackAPI:1.20.1-forge-1.2')
+    implementation fg.deobf("curse.maven:immersive-engineering-231951:5224387")
+}
+
 assemble.dependsOn shadowJar
 
 reobf {

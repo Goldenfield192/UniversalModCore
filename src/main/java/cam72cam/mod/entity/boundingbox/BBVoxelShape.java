@@ -6,33 +6,17 @@ import net.minecraft.Util;
 import net.minecraft.core.AxisCycle;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.shapes.BitSetDiscreteVoxelShape;
-import net.minecraft.world.phys.shapes.CubeVoxelShape;
-import net.minecraft.world.phys.shapes.DiscreteVoxelShape;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class BBVoxelShape extends VoxelShape {
-    //Though I don't understand what doe this mean...
-    private static final VoxelShape FULL_CUBE1 = Util.make(() -> {
-        DiscreteVoxelShape lvt_0_1_ = new BitSetDiscreteVoxelShape(200, 200, 200);
-        for (int i = -100; i <= 99; i++) {
-            for (int i1 = -100; i1 <= 99; i1++) {
-                for (int i2 = -100; i2 <= 99; i2++) {
-                    lvt_0_1_.fill(1, i1, i2);
-                }
-            }
-        }
-        return new CubeVoxelShape(lvt_0_1_);
-    });
-
     private BoundingBox bb;
 
     public BBVoxelShape(BoundingBox boundingBox) {
-        super(FULL_CUBE1.shape);
+        super(Shapes.block().shape);
         this.bb = boundingBox;
     }
 
@@ -70,15 +54,13 @@ public class BBVoxelShape extends VoxelShape {
 
     @Override
     protected DoubleList getCoords(Direction.Axis axis) {
-        switch(axis) {
-            case X:
-                return DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minX, bb.maxX}, 200));
-            case Y:
-                return DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minY, bb.maxY}, 200));
-            case Z:
-                return DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minZ, bb.maxZ}, 200));
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (axis) {
+            case X -> DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minX, bb.maxX},
+                                                         Shapes.block().shape.getSize(Direction.Axis.X) + 1));
+            case Y -> DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minY, bb.maxY},
+                                                         Shapes.block().shape.getSize(Direction.Axis.Y) + 1));
+            case Z -> DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minZ, bb.maxZ},
+                                                         Shapes.block().shape.getSize(Direction.Axis.Z) + 1));
+        };
     }
 }
