@@ -11,8 +11,6 @@
     "large_entity_collision.MixinEntitySectionStorage"
   ],
   "client": [
-    "global_renderer.MixinRenderGlobal",
-    "iris_pbr.MixinDeferredWorldRenderingPipeline",
-    "iris_pbr.MixinNewWorldRenderingPipeline"
+    "global_renderer.MixinRenderGlobal"
   ]
 }
