@@ -8,6 +8,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1300,
   "mixins": [
+    "advencement_register.MixinAdvancementManager",
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [

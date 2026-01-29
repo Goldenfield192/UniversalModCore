@@ -101,6 +101,15 @@ dependencies {
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
 }
 
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+}
+
+dependencies {
+    compile files('D:\\JavaStudy\\ImmersiveRailroading\\build\\libs\\ImmersiveRailroading-1.12.2-forge-1.10.0-dfcfc0a.jar')
+    compile 'trackapi:TrackAPI:1.12.2-forge-1.2'
+}
+
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 }
