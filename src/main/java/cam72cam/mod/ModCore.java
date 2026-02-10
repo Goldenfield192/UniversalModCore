@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import cam72cam.mod.event.CommonEvents;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.FileUtil;
@@ -35,10 +36,7 @@ import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.item.Fuzzy;
-import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
@@ -494,12 +492,6 @@ public class ModCore {
         @Override
         public void serverEvent(ModEvent event) {
         }
-    }
-
-    public static void genData(String MODID, GatherDataEvent event) {
-        CommonEvents.Recipe.REGISTER.execute(Runnable::run);
-        event.getGenerator().addProvider(true, new Recipes(event.getGenerator().getPackOutput()));
-        Fuzzy.register(event, event.getExistingFileHelper());
     }
 
     public static void debug(String msg, Object... params) {

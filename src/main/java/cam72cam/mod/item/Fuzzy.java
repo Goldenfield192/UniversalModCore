@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import cam72cam.mod.event.CommonEvents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.Tags;
@@ -23,12 +24,17 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.common.data.ForgeBlockTagsProvider;
 import net.minecraftforge.common.data.ForgeItemTagsProvider;
 import net.minecraftforge.data.event.GatherDataEvent;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.tags.ITag;
+import net.minecraftforge.registries.tags.ITagManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /** OreDict / Tag abstraction.  Use for item equivalence */
 public class Fuzzy {
+    public static Map<ResourceLocation, Set<String>> lookup = new HashMap<>();
+
     public static final Fuzzy WOOD_STICK = new Fuzzy(Tags.Items.RODS_WOODEN, "stickWood").add(Items.STICK);
     public static final Fuzzy WOOD_PLANK = new Fuzzy(ItemTags.PLANKS, "plankWood").add(Blocks.OAK_PLANKS);
     public static final Fuzzy REDSTONE_DUST = new Fuzzy(Tags.Items.DUSTS_REDSTONE, "dustRedstone").add(Items.REDSTONE);
@@ -198,6 +204,7 @@ public class Fuzzy {
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
         customItems.add(item);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.location(), item));
         return this;
     }
 
@@ -209,7 +216,12 @@ public class Fuzzy {
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
         includes.add(other);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.location(), other.tag));
         return this;
+    }
+
+    public TagKey<Item> getTag() {
+        return tag;
     }
 
     @Override
@@ -217,29 +229,8 @@ public class Fuzzy {
         return ident;
     }
 
-    public static void register(GatherDataEvent event, ExistingFileHelper existingFileHelper) {
-        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(event.getGenerator().getPackOutput(), event.getLookupProvider(), ModCore.MODID, existingFileHelper) {
-            @Override
-            protected void addTags(HolderLookup.Provider p_256380_) {
-                // NOP
-            }
-        };
-        event.getGenerator().addProvider(true, blocktagsprovider);
-        event.getGenerator().addProvider(true, new ItemTagsProvider(event.getGenerator().getPackOutput(), event.getLookupProvider(), blocktagsprovider.contentsGetter(), ModCore.MODID, event.getExistingFileHelper()) {
-            @Override
-            public void addTags(HolderLookup.Provider provider) {
-                for (Fuzzy value : registered.values()) {
-                    //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        TagsProvider.TagAppender<Item> builder = tag(value.tag);
-                        for (Item customItem : value.customItems) {
-                            builder.add(customItem.builtInRegistryHolder().key());
-                        }
-                        for (Fuzzy include : value.includes) {
-                            builder.addTag(include.tag);
-                        }
-                    //}
-                }
-            }
-        });
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
 }

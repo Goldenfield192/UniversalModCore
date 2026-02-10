@@ -1,6 +1,10 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.platform.RegisterAdvancementEvent;
+import cam72cam.mod.event.platform.RegisterBlockTagEvent;
+import cam72cam.mod.event.platform.RegisterCraftingRecipeEvent;
+import cam72cam.mod.event.platform.RegisterItemTagEvent;
 import cam72cam.mod.entity.ModdedEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -26,6 +30,8 @@ import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
 import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /** Registry of events that fire off on both client and server.  Do not use directly! */
@@ -47,6 +53,7 @@ public class CommonEvents {
     public static final class Block {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.level.block.Block>>> REGISTER = new Event<>();
         public static final Event<EventBusForge.BlockBrokenEvent> BROKEN = new Event<>();
+        public static final Event<Consumer<RegisterBlockTagEvent>> TAGS = new Event<>();
     }
 
     public static final class Tile {
@@ -56,10 +63,13 @@ public class CommonEvents {
     public static final class Item {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.item.Item>>> REGISTER = new Event<>();
         public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ModCore.MODID);
+        public static final Event<Consumer<RegisterItemTagEvent>> TAGS = new Event<>();
     }
 
     public static final class Recipe {
-        public static final Event<Runnable> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterCraftingRecipeEvent>> REGISTER = new Event<>();
+        //TODO make event listener refreshable
+        public static ThreadLocal<List<Consumer<RegisterAdvancementEvent>>> RECIPE_LISTENER = ThreadLocal.withInitial(ArrayList::new);
     }
 
     public static final class Entity {
@@ -158,6 +168,28 @@ public class CommonEvents {
             event.register(ForgeRegistries.Keys.ITEMS, helper -> Item.REGISTER.execute(x -> x.accept(helper)));
             event.register(ForgeRegistries.Keys.ENTITY_TYPES, helper -> Entity.REGISTER.execute(x -> x.accept(helper)));
             event.register(ForgeRegistries.Keys.MENU_TYPES, helper -> CONTAINER_REGISTRY.execute(x -> x.accept(helper)));
+        }
+
+        @SubscribeEvent
+        public static void registerItemTag(RegisterBlockTagEvent event) {
+            Block.TAGS.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerItemTag(RegisterItemTagEvent event) {
+            Item.TAGS.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerCraftingRecipe(RegisterCraftingRecipeEvent event) {
+            CommonEvents.Recipe.REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerRecipeTrigger(RegisterAdvancementEvent event) {
+            List<Consumer<RegisterAdvancementEvent>> consumers = Recipe.RECIPE_LISTENER.get();
+            consumers.forEach(x -> x.accept(event));
+            CommonEvents.Recipe.RECIPE_LISTENER.set(new ArrayList<>());
         }
     }
 }
