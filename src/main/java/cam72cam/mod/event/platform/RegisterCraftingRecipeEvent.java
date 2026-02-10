@@ -12,10 +12,7 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 //Only support full height recipe for now
@@ -31,7 +28,7 @@ public class RegisterCraftingRecipeEvent extends Event implements IModBusEvent {
     public void register(ItemStack target, int width, List<Fuzzy> ingredients, List<Fuzzy> dependencies, List<Fuzzy> conflicts) {
         ResourceLocation itemName = ForgeRegistries.ITEMS.getKey(target.internal().getItem());
         ResourceLocation name = ResourceLocation.fromNamespaceAndPath(itemName.getNamespace(),
-                                                                      itemName.getPath() + "w" + ingredients.hashCode() + "w" + dependencies.hashCode() + "w" + conflicts.hashCode());
+                                                                      itemName.getPath() + ingredients.hashCode() + dependencies.hashCode() + "w" + conflicts.hashCode());
 
         boolean dependencyNotMet = dependencies.stream().anyMatch(f -> {
             Set<String> strings = Fuzzy.lookup.get(f.getTag().location());
@@ -52,6 +49,8 @@ public class RegisterCraftingRecipeEvent extends Event implements IModBusEvent {
         }
 
         List<Ingredient> n = new ArrayList<>();
+        System.out.println(name);
+        System.out.println(Arrays.toString(ingredients.toArray()));
         for (Fuzzy ingredient : ingredients) {
             if ((ingredient == null || Fuzzy.lookup.get(ingredient.getTag().location()) == null) || (ingredient.isEmpty() && Fuzzy.lookup.get(ingredient.getTag().location()).isEmpty())) {
                 n.add(Ingredient.EMPTY);
