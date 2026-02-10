@@ -30,7 +30,7 @@ public class MixinTagCollection {
     @Final
     private String directory;
 
-    @Inject(method = "load", at = @At("RETURN"), remap = false)
+    @Inject(method = "load", at = @At("RETURN"))
     public void onRegisterTag(ResourceManager p_144496_, CallbackInfoReturnable<Map<ResourceLocation, List<TagLoader.EntryWithSource>>> cir) {
         Map<ResourceLocation, List<TagLoader.EntryWithSource>> map = cir.getReturnValue();
         if (this.directory.contains("block")) {
