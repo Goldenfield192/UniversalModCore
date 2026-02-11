@@ -191,7 +191,7 @@ public class Fuzzy {
 
     /** Use to register an itemstack */
     public Fuzzy add(ItemStack item) {
-        add(item.internal().getItem());
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.location(), item));
         return this;
     }
 
