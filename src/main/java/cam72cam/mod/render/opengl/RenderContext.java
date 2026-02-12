@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -10,21 +11,20 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    //Lightmap UV coordinate for full bright
+    public static final int FULL_BRIGHT = 240;
+
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
 
@@ -39,21 +39,10 @@ public class RenderContext {
     }
 
     public static With apply(RenderState state) {
-        return apply(state, false);
-    }
-
-    /** Internal, use the method above */
-    public static With apply(RenderState state, boolean useBeaconShader) {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
-        ShaderInstance shader;
-        boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
-        if (vanillaEmissive && useBeaconShader) {
-            shader = GameRenderer.getRendertypeBeaconBeamShader();
-        } else {
-            shader = RenderSystem.getShader();
-        }
+        ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -84,13 +73,13 @@ public class RenderContext {
             if (color == null) {
                 color = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
             }
-            float[] oldColor = RenderSystem.getShaderColor();
+            float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        //TODO Without Iris there may be some kinds of light bug like 1.16 era...figure out why
-        if (state.lightmap != null && !vanillaEmissive) {
+        if (state.lightmap != null) {
+            //Our custom shader will handle vanilla emissive stuff
             float oldX;
             float oldY;
             if (state.stage == Stage.ENTITY) {
@@ -235,8 +224,9 @@ public class RenderContext {
             if (element.getUsage() == VertexFormatElement.Usage.UV) {
                 for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        int x = (int) (oldX * 240);
-                        int y = (int) (oldY * 240);
+                        //240 means full bright
+                        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
+                        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
                         GL32.glVertexAttribI2i(i, x, y);
                     }
                 }
@@ -287,10 +277,5 @@ public class RenderContext {
         OVERLAY_TEXT, //Name plates...
 
         NONE
-    }
-
-    public static void resetState() {
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1,1,1,1);
     }
 }
