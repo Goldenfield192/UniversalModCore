@@ -12,8 +12,8 @@ import java.util.Objects;
  * Note that in order to make this work on 1.21.1 and upper, <code>DamageType</code>s should be treated as constants and created as soon as possible (like CONSTRUCT phase)
  */
 public class DamageType {
-    public static final DamageType FIRE = new DamageType("fire");
-    public static final DamageType PROJECTILE = new DamageType("projectile");
+    public static final DamageType FIRE = new DamageType(DamageSource.IN_FIRE);
+    public static final DamageType PROJECTILE = new DamageType("arrow");
     public static final DamageType EXPLOSION = new DamageType("explosion");
     public static final DamageType MAGIC = new DamageType("magic");
     public static final DamageType OTHER = new DamageType("other");
@@ -35,13 +35,14 @@ public class DamageType {
         this(new Identifier(cause));
     }
 
-    private DamageType(DamageSource source) {
-        this(new Identifier("minecraft", source.damageType));
-    }
-
     private DamageType(Identifier cause) {
         this.damageType = cause;
         this.internal = new DamageSource(damageType.internal.toString());
+    }
+
+    private DamageType(DamageSource source) {
+        this.damageType = new Identifier(source.damageType);
+        this.internal = source;
     }
 
     @Override
