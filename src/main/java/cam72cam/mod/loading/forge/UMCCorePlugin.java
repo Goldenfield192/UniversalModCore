@@ -1,8 +1,12 @@
-package cam72cam.mod;
+package cam72cam.mod.loading.forge;
 
+import cam72cam.mod.ModCore;
+import cam72cam.mod.loading.UMCMod;
 import net.minecraftforge.fml.common.FMLLog;
+import net.minecraftforge.fml.common.ModContainerFactory;
 import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.objectweb.asm.Type;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
@@ -14,8 +18,9 @@ import java.security.CodeSource;
 import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
-public class UMCMixinPlugin implements IFMLLoadingPlugin {
-    public UMCMixinPlugin() {
+public class UMCCorePlugin implements IFMLLoadingPlugin {
+    public UMCCorePlugin() {
+        //Bootstrap mixin 0.8.2
         MixinBootstrap.init();
         Mixins.addConfiguration("mixins.feat.universalmodcore.json");
         Mixins.addConfiguration("mixins.fix.universalmodcore.json");
@@ -36,6 +41,8 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
                 FMLLog.log.warn(e);
             }
         }
+
+        ModContainerFactory.instance().registerContainerType(Type.getType(UMCMod.class), UMCModContainer.class);
     }
 
     @Override
