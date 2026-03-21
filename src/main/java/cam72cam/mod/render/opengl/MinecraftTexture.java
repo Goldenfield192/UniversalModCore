@@ -17,7 +17,7 @@ public class MinecraftTexture implements Texture {
     }
 
     @Override
-    public int getId() {
+    public Identifier getId() {
         TextureManager texManager = Minecraft.getMinecraft().getTextureManager();
 
         ITextureObject tex = texManager.getTexture(id.internal);
@@ -43,6 +43,6 @@ public class MinecraftTexture implements Texture {
                 tex = texManager.getTexture(id.internal);
             }
         }
-        return tex.getGlTextureId();
+        return id;
     }
 }

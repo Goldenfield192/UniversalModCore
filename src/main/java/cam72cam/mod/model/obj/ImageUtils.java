@@ -38,10 +38,24 @@ public class ImageUtils {
             int g = c_argb >> 8 & 255;
             int b = c_argb >> 0 & 255;
             pixels[i] = (r << 24) | (g << 16) | (b << 8) | a;
-
-            //pixels[i] = (argb & 0xFFFFFF) << 8 | (argb >> 24);
         }
         ModCore.debug("Fetching pixels for %sx%s took %sms", image.getWidth(), image.getHeight(), (System.currentTimeMillis() - start));
         return pixels;
+    }
+
+    public static BufferedImage fromRGBA(byte[] data, int width, int height) {
+        long start = System.currentTimeMillis();
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] pixels = new int[width * height];
+        for (int i = 0; i < pixels.length; i += 4) {
+            int r = data[i + 0];
+            int g = data[i + 1];
+            int b = data[i + 2];
+            int a = data[i + 3];
+            pixels[i] = (a << 24) | (r << 16) | (g << 8) | (b);
+        }
+        image.setRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+        ModCore.debug("Rebuilding pixels for %sx%s took %sms", image.getWidth(), image.getHeight(), (System.currentTimeMillis() - start));
+        return image;
     }
 }

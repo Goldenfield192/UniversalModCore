@@ -3,11 +3,21 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.model.obj.ImageUtils;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -26,9 +36,11 @@ public abstract class CustomTexture implements Texture {
 
     private Future<ByteBuffer> loader = null;
     private long lastUsed;
-    private Integer textureID;
+    private Identifier textureID;
+    private volatile boolean isLoaded;
 
     private static final List<CustomTexture> textures = new ArrayList<>();
+    private int counter = 0;
 
     public static void registerClientEvents() {
         // free unused textures
@@ -36,7 +48,7 @@ public abstract class CustomTexture implements Texture {
             try {
                 synchronized (textures) {
                     for (CustomTexture texture : textures) {
-                        if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isDone())) {
+                        if (texture.isLoaded && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000L && (texture.loader == null || !texture.loader.isDone())) {
                             texture.dealloc();
                         }
                     }
@@ -58,19 +70,14 @@ public abstract class CustomTexture implements Texture {
     }
 
     protected abstract ByteBuffer getData();
-    protected int internalGLFormat() {
-        return GL11.GL_RGBA;
-    }
 
     private void createTexture(ByteBuffer buffer) {
-        textureID = GL11.glGenTextures();
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        BufferedImage image = ImageUtils.fromRGBA(buffer.array(), width, height);
+        DynamicTexture texture = new DynamicTexture(image);
+        if (this.textureID == null) {
+            this.textureID = new Identifier(Minecraft.getMinecraft().getTextureManager()
+                                                     .getDynamicTextureLocation("umc_generated_" + counter, texture));
+            counter++;
         }
     }
 
@@ -80,6 +87,7 @@ public abstract class CustomTexture implements Texture {
                 if (loader.isDone()) {
                     try {
                         createTexture(loader.get());
+                        this.isLoaded = true;
                     } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
@@ -94,12 +102,13 @@ public abstract class CustomTexture implements Texture {
 
     private void directLoader() {
         createTexture(getData());
+        this.isLoaded = true;
     }
 
     public Texture synchronous(boolean sync) {
         lastUsed = System.currentTimeMillis();
 
-        if (textureID == null) {
+        if (!isLoaded) {
             if (sync) {
                 directLoader();
             } else {
@@ -110,28 +119,28 @@ public abstract class CustomTexture implements Texture {
     }
 
     public boolean isLoaded() {
-        return textureID != null;
+        return isLoaded;
     }
 
     @Override
-    public int getId() {
+    public Identifier getId() {
         lastUsed = System.currentTimeMillis();
 
-        if (textureID == null) {
+        if (!isLoaded) {
             if (Config.ThreadedTextureLoading) {
                 threadedLoader();
             } else {
                 directLoader();
             }
         }
-        return textureID == null ? NO_TEXTURE.getId() : this.textureID;
+        return !isLoaded ? NO_TEXTURE.getId() : this.textureID;
     }
 
     public void dealloc() {
         synchronized (textures) {
-            if (this.textureID != null) {
-                GL11.glDeleteTextures(this.textureID);
-                this.textureID = null;
+            if (this.isLoaded) {
+                Minecraft.getMinecraft().getTextureManager().deleteTexture(this.textureID.internal);
+                this.isLoaded = false;
                 this.loader = null;
             }
         }

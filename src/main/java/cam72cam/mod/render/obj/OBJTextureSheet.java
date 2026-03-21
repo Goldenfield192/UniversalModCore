@@ -18,9 +18,6 @@ public class OBJTextureSheet extends CustomTexture {
     @Override
     protected ByteBuffer getData() {
         byte[] raw = data.get().bytes();
-        ByteBuffer buffer = GLAllocation.createDirectByteBuffer(raw.length);
-        buffer.put(raw);
-        buffer.flip();
-        return buffer;
+        return ByteBuffer.wrap(raw);
     }
 }

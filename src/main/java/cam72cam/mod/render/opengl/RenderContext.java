@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.texture.TextureManager;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -87,6 +88,7 @@ public class RenderContext {
             }
         }
 
+        TextureManager texManager = Minecraft.getMinecraft().getTextureManager();
         if (state.texture != null) {
             GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
             boolean oldTexEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
@@ -101,7 +103,7 @@ public class RenderContext {
                 applyBool(GL11.GL_TEXTURE_2D, true);
 
                 int oldTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, texManager.getTexture(state.texture.getId().internal).getGlTextureId());
                 restore.add(() -> {
                     GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
@@ -127,7 +129,7 @@ public class RenderContext {
                     applyBool(GL11.GL_TEXTURE_2D, true);
 
                     int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, texManager.getTexture(state.normals.getId().internal).getGlTextureId());
                     restore.add(() -> {
                         GL13.glActiveTexture(GL13.GL_TEXTURE2);
                         applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
@@ -151,7 +153,7 @@ public class RenderContext {
                     applyBool(GL11.GL_TEXTURE_2D, true);
 
                     int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, texManager.getTexture(state.specular.getId().internal).getGlTextureId());
                     restore.add(() -> {
                         GL13.glActiveTexture(GL13.GL_TEXTURE3);
                         applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
