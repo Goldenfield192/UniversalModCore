@@ -39,66 +39,89 @@ class BakedScaledModel implements IBakedModel {
         this.source = source;
         this.transform = transform;
 
-        if(topFacing != null) {
-            this.quadCache.clear();
+        if (topFacing == null) return;
 
-            float maxY = -Float.MAX_VALUE;
-            float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
-            float minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
-            Map<EnumFacing, List<BakedQuad>> tempCache = new HashMap<>();
+        this.quadCache.clear();
 
-            for (EnumFacing side : EnumFacing.values()) {
-                List<BakedQuad> sideQuads = source.getQuads(null, side, 0);
-                if (sideQuads.isEmpty()) continue;
+        // apply transform, calculate boundary
+        float minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+        float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
+        float minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+        Map<EnumFacing, List<BakedQuad>> tempCache = new HashMap<>();
 
-                List<BakedQuad> transformed = new ArrayList<>();
-                for (BakedQuad quad : sideQuads) {
-                    int[] data = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
-                    VertexFormat format = quad.getFormat();
+        for (EnumFacing side : EnumFacing.values()) {
+            List<BakedQuad> sideQuads = source.getQuads(null, side, 0);
+            if (sideQuads.isEmpty()) continue;
 
-                    for (int i = 0; i < 4; i++) {
-                        int offset = format.getIntegerSize() * i;
-                        Vector3f vec = new Vector3f(
-                                Float.intBitsToFloat(data[offset]),
-                                Float.intBitsToFloat(data[offset + 1]),
-                                Float.intBitsToFloat(data[offset + 2])
-                        );
-                        transform.apply(vec);
-                        data[offset] = Float.floatToRawIntBits(vec.x);
-                        data[offset + 1] = Float.floatToRawIntBits(vec.y);
-                        data[offset + 2] = Float.floatToRawIntBits(vec.z);
-                        if (vec.y > maxY) maxY = vec.y;
+            List<BakedQuad> transformed = new ArrayList<>();
+            for (BakedQuad quad : sideQuads) {
+                int[] data = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
+                VertexFormat format = quad.getFormat();
 
-                        if (vec.x < minX) minX = vec.x;
-                        if (vec.x > maxX) maxX = vec.x;
-                        if (vec.z < minZ) minZ = vec.z;
-                        if (vec.z > maxZ) maxZ = vec.z;
-                    }
-
-                    transformed.add(new BakedQuad(data, quad.getTintIndex(), quad.getFace(),
-                            quad.getSprite(), quad.shouldApplyDiffuseLighting(), format));
+                for (int i = 0; i < 4; i++) {
+                    int offset = format.getIntegerSize() * i;
+                    Vector3f vec = new Vector3f(
+                            Float.intBitsToFloat(data[offset]),
+                            Float.intBitsToFloat(data[offset + 1]),
+                            Float.intBitsToFloat(data[offset + 2])
+                    );
+                    transform.apply(vec);
+                    data[offset] = Float.floatToRawIntBits(vec.x);
+                    data[offset + 1] = Float.floatToRawIntBits(vec.y);
+                    data[offset + 2] = Float.floatToRawIntBits(vec.z);
+                    if (vec.y < minY) minY = vec.y;
+                    if (vec.y > maxY) maxY = vec.y;
+                    if (vec.x < minX) minX = vec.x;
+                    if (vec.x > maxX) maxX = vec.x;
+                    if (vec.z < minZ) minZ = vec.z;
+                    if (vec.z > maxZ) maxZ = vec.z;
                 }
-                tempCache.put(side, transformed);
+
+                transformed.add(new BakedQuad(data, quad.getTintIndex(), quad.getFace(),
+                        quad.getSprite(), quad.shouldApplyDiffuseLighting(), format));
             }
+            tempCache.put(side, transformed);
+        }
 
-            if (maxY == -Float.MAX_VALUE) {
-                quadCache.putAll(tempCache);
-                return;
+        if (maxY == -Float.MAX_VALUE) {
+            quadCache.putAll(tempCache);
+            return;
+        }
+
+        // top face center
+        float centerX = (minX + maxX) / 2f;
+        float centerZ = (minZ + maxZ) / 2f;
+
+        // flat
+        double dx = topFacing.x, dy = topFacing.y, dz = topFacing.z;
+        if (Math.abs(dy) < 1e-5) {
+            quadCache.putAll(tempCache);
+            return;
+        }
+        double d0 = dx * centerX + dy * maxY + dz * centerZ;
+
+        // make top ace tilted, find the lowest point
+        float minTopY = Float.MAX_VALUE;
+        for (List<BakedQuad> quads : tempCache.values()) {
+            for (BakedQuad quad : quads) {
+                VertexFormat format = quad.getFormat();
+                int[] data = quad.getVertexData();
+                for (int i = 0; i < 4; i++) {
+                    int offset = format.getIntegerSize() * i;
+                    float y = Float.intBitsToFloat(data[offset + 1]);
+                    if (Math.abs(y - maxY) < 1e-5) {
+                        float x = Float.intBitsToFloat(data[offset]);
+                        float z = Float.intBitsToFloat(data[offset + 2]);
+                        double newY = (d0 - dx * x - dz * z) / dy;
+                        data[offset + 1] = Float.floatToRawIntBits((float) newY);
+                        if ((float) newY < minTopY) minTopY = (float) newY;
+                    }
+                }
             }
+        }
 
-            // top face center
-            float centerX = (minX + maxX) / 2f;
-            float centerZ = (minZ + maxZ) / 2f;
-
-            // dx*x + dy*y + dz*z = d0, center pos: (centerX, maxY, centerZ)
-            double dx = topFacing.x, dy = topFacing.y, dz = topFacing.z;
-            if (Math.abs(dy) < 1e-5) { // normal is flat
-                quadCache.putAll(tempCache);
-                return;
-            }
-            double d0 = dx * centerX + dy * maxY + dz * centerZ;
-
-            // judge vertex to fit origin center height
+        // judge bottom if needed
+        if (minTopY < minY) {
             for (List<BakedQuad> quads : tempCache.values()) {
                 for (BakedQuad quad : quads) {
                     VertexFormat format = quad.getFormat();
@@ -106,19 +129,16 @@ class BakedScaledModel implements IBakedModel {
                     for (int i = 0; i < 4; i++) {
                         int offset = format.getIntegerSize() * i;
                         float y = Float.intBitsToFloat(data[offset + 1]);
-                        if (Math.abs(y - maxY) < 1e-5) {
-                            float x = Float.intBitsToFloat(data[offset]);
-                            float z = Float.intBitsToFloat(data[offset + 2]);
-                            double newY = (d0 - dx * x - dz * z) / dy;
-                            data[offset + 1] = Float.floatToRawIntBits((float) newY);
+                        if (Math.abs(y - minY) < 1e-5) {
+                            data[offset + 1] = Float.floatToRawIntBits(minTopY);
                         }
                     }
-                    // TODO: updating shade of top face?
                 }
             }
-
-            quadCache.putAll(tempCache);
         }
+        //TODO: top face shading
+
+        quadCache.putAll(tempCache);
     }
 
     @Override
