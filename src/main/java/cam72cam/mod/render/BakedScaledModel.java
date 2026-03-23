@@ -1,5 +1,6 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -32,6 +33,92 @@ class BakedScaledModel implements IBakedModel {
     public BakedScaledModel(IBakedModel source, float height) {
         this.source = source;
         transform = new Matrix4().scale(1, height, 1);
+    }
+
+    public BakedScaledModel(IBakedModel source, Matrix4 transform, Vec3d topFacing) {
+        this.source = source;
+        this.transform = transform;
+
+        if(topFacing != null) {
+            this.quadCache.clear();
+
+            float maxY = -Float.MAX_VALUE;
+            float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
+            float minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+            Map<EnumFacing, List<BakedQuad>> tempCache = new HashMap<>();
+
+            for (EnumFacing side : EnumFacing.values()) {
+                List<BakedQuad> sideQuads = source.getQuads(null, side, 0);
+                if (sideQuads.isEmpty()) continue;
+
+                List<BakedQuad> transformed = new ArrayList<>();
+                for (BakedQuad quad : sideQuads) {
+                    int[] data = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
+                    VertexFormat format = quad.getFormat();
+
+                    for (int i = 0; i < 4; i++) {
+                        int offset = format.getIntegerSize() * i;
+                        Vector3f vec = new Vector3f(
+                                Float.intBitsToFloat(data[offset]),
+                                Float.intBitsToFloat(data[offset + 1]),
+                                Float.intBitsToFloat(data[offset + 2])
+                        );
+                        transform.apply(vec);
+                        data[offset] = Float.floatToRawIntBits(vec.x);
+                        data[offset + 1] = Float.floatToRawIntBits(vec.y);
+                        data[offset + 2] = Float.floatToRawIntBits(vec.z);
+                        if (vec.y > maxY) maxY = vec.y;
+
+                        if (vec.x < minX) minX = vec.x;
+                        if (vec.x > maxX) maxX = vec.x;
+                        if (vec.z < minZ) minZ = vec.z;
+                        if (vec.z > maxZ) maxZ = vec.z;
+                    }
+
+                    transformed.add(new BakedQuad(data, quad.getTintIndex(), quad.getFace(),
+                            quad.getSprite(), quad.shouldApplyDiffuseLighting(), format));
+                }
+                tempCache.put(side, transformed);
+            }
+
+            if (maxY == -Float.MAX_VALUE) {
+                quadCache.putAll(tempCache);
+                return;
+            }
+
+            // top face center
+            float centerX = (minX + maxX) / 2f;
+            float centerZ = (minZ + maxZ) / 2f;
+
+            // dx*x + dy*y + dz*z = d0, center pos: (centerX, maxY, centerZ)
+            double dx = topFacing.x, dy = topFacing.y, dz = topFacing.z;
+            if (Math.abs(dy) < 1e-5) { // normal is flat
+                quadCache.putAll(tempCache);
+                return;
+            }
+            double d0 = dx * centerX + dy * maxY + dz * centerZ;
+
+            // judge vertex to fit origin center height
+            for (List<BakedQuad> quads : tempCache.values()) {
+                for (BakedQuad quad : quads) {
+                    VertexFormat format = quad.getFormat();
+                    int[] data = quad.getVertexData();
+                    for (int i = 0; i < 4; i++) {
+                        int offset = format.getIntegerSize() * i;
+                        float y = Float.intBitsToFloat(data[offset + 1]);
+                        if (Math.abs(y - maxY) < 1e-5) {
+                            float x = Float.intBitsToFloat(data[offset]);
+                            float z = Float.intBitsToFloat(data[offset + 2]);
+                            double newY = (d0 - dx * x - dz * z) / dy;
+                            data[offset + 1] = Float.floatToRawIntBits((float) newY);
+                        }
+                    }
+                    // TODO: updating shade of top face?
+                }
+            }
+
+            quadCache.putAll(tempCache);
+        }
     }
 
     @Override
