@@ -57,10 +57,17 @@ public interface IBoundingBox {
     /** Move the BB by the given amount */
     IBoundingBox offset(Vec3d vec3d);
 
+    default Vec3d adjustMovement(IBoundingBox other, Vec3d velocity) {
+        return new Vec3d(calculateXOffset(other, velocity.x), calculateYOffset(other, velocity.y), calculateZOffset(other, velocity.z));
+    }
+
+    @Deprecated
     double calculateXOffset(IBoundingBox other, double offsetX);
 
+    @Deprecated
     double calculateYOffset(IBoundingBox other, double offsetY);
 
+    @Deprecated
     double calculateZOffset(IBoundingBox other, double offsetZ);
 
     /** Does the AABB represented by these coords intersect this BB */

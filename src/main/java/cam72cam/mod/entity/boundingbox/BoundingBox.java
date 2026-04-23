@@ -73,17 +73,17 @@ public class BoundingBox extends AxisAlignedBB {
     /* Interactions */
     @Override
     public double calculateXOffset(AxisAlignedBB other, double offsetX) {
-        return internal.calculateXOffset(IBoundingBox.from(other), offsetX);
+        return internal.adjustMovement(IBoundingBox.from(other), new Vec3d(offsetX, 0, 0)).x;
     }
 
     @Override
     public double calculateYOffset(AxisAlignedBB other, double offsetY) {
-        return internal.calculateYOffset(IBoundingBox.from(other), offsetY);
+        return internal.adjustMovement(IBoundingBox.from(other), new Vec3d(0, offsetY, 0)).y;
     }
 
     @Override
     public double calculateZOffset(AxisAlignedBB other, double offsetZ) {
-        return internal.calculateZOffset(IBoundingBox.from(other), offsetZ);
+        return internal.adjustMovement(IBoundingBox.from(other), new Vec3d(0, 0, offsetZ)).z;
     }
 
     @Override

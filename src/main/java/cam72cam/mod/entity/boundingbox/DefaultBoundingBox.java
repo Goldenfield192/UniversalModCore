@@ -59,6 +59,13 @@ public class DefaultBoundingBox implements IBoundingBox {
     }
 
     @Override
+    public Vec3d adjustMovement(IBoundingBox other, Vec3d velocity) {
+        AxisAlignedBB aabb = BoundingBox.from(other);
+        return new Vec3d(internal.calculateXOffset(aabb, velocity.x),
+                         internal.calculateYOffset(aabb, velocity.y),
+                         internal.calculateZOffset(aabb, velocity.z));
+    }
+
     public double calculateXOffset(IBoundingBox other, double offsetX) {
         return internal.calculateXOffset(BoundingBox.from(other), offsetX);
     }
