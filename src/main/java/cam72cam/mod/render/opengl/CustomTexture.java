@@ -3,6 +3,7 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.api.RenderCtx;
 import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -64,7 +65,7 @@ public abstract class CustomTexture implements Texture {
 
     private void createTexture(ByteBuffer buffer) {
         textureID = GL11.glGenTextures();
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
+        try (With ctx = RenderCtx.getInstance().apply(new RenderState().texture(Texture.wrap(textureID)))) {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);

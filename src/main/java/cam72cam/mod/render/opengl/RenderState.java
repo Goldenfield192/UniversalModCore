@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
+import cam72cam.mod.render.api.RenderCtx;
 import util.Matrix4;
 
 import javax.annotation.Nullable;
@@ -28,7 +29,7 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
-    protected RenderContext.Stage stage = RenderContext.Stage.NONE;
+    protected RenderCtx.Stage stage = RenderCtx.Stage.NONE;
 
     public RenderState() {
     }
@@ -162,11 +163,11 @@ public class RenderState {
         this.shader = shader;
         return this;
     }
-    public RenderState stage(RenderContext.Stage stage) {
-        this.stage = stage != null ? stage : RenderContext.Stage.NONE;
+    public RenderState stage(GlRenderContext.Stage stage) {
+        this.stage = stage != null ? stage : RenderCtx.Stage.NONE;
         return this;
     }
-    public RenderContext.Stage getStage() {
+    public GlRenderContext.Stage getStage() {
         return this.stage;
     }
 }

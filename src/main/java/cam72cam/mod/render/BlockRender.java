@@ -5,7 +5,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.api.RenderCtx;
 import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -92,7 +92,7 @@ public class BlockRender {
                     return;
                 }
 
-                model.renderCustom(new RenderState().translate(x, y, z).stage(RenderContext.Stage.BLOCK), partialTicks);
+                model.renderCustom(new RenderState().translate(x, y, z).stage(RenderCtx.Stage.BLOCK), partialTicks);
             }
 
             public boolean isGlobalRenderer(TileEntity te) {

@@ -1,7 +1,7 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.api.RenderCtx;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
@@ -85,7 +85,7 @@ public class StandardModel {
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 
             matrix.model_view().multiply(transform);
-            try (With ctx = RenderContext.apply(matrix)) {
+            try (With ctx = RenderCtx.getInstance().apply(matrix)) {
                 Minecraft.getMinecraft().getRenderItem().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);
             }
         });
@@ -149,7 +149,7 @@ public class StandardModel {
             quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
             worldRenderer.finishDrawing();
         }
-        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE))))) {
+        try (With ctx = RenderCtx.getInstance().apply(state.clone().texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE))))) {
             new WorldVertexBufferUploader().draw(worldRenderer);
         }
     }

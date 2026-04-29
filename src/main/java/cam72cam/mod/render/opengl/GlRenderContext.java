@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.render.ShaderHelper;
+import cam72cam.mod.render.api.RenderCtx;
 import cam72cam.mod.util.With;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -18,13 +19,13 @@ import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
-public class RenderContext {
+public class GlRenderContext extends RenderCtx {
     private static FloatBuffer fourFloatBuffer;
 
-    private RenderContext() {
+    public GlRenderContext() {
     }
 
-    public static With apply(RenderState state) {
+    public With apply(RenderState state) {
         List<Runnable> restore = new ArrayList<>();
 
         if (state.model_view != null || state.projection != null) {
@@ -265,28 +266,11 @@ public class RenderContext {
         GL11.glMultMatrix(fbm);
     }
 
-    public static void applyBool(int opt, boolean currState) {
-        if (currState) {
-            GL11.glEnable(opt);
+    static void applyBool(int glOptCode, boolean state) {
+        if (state) {
+            GL11.glEnable(glOptCode);
         } else {
-            GL11.glDisable(opt);
+            GL11.glDisable(glOptCode);
         }
-    }
-
-    public enum Stage {
-        BLOCK,
-
-        ENTITY,
-
-        ITEM_SPRITE_TEX,
-        ITEM_IN_WORLD,
-        ITEM_IN_GUI,
-
-        GUI,
-
-        OVERLAY,      //Mouseover...
-        OVERLAY_TEXT, //Name plates...
-
-        NONE
     }
 }

@@ -6,7 +6,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.api.RenderCtx;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -104,7 +104,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
-        state.stage(RenderContext.Stage.ENTITY);
+        state.stage(RenderCtx.Stage.ENTITY);
         renderers.get(self.getClass()).render(self, state, partialTicks);
     }
 
@@ -122,7 +122,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
-        state.stage(RenderContext.Stage.ENTITY);
+        state.stage(RenderCtx.Stage.ENTITY);
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
     }
 
