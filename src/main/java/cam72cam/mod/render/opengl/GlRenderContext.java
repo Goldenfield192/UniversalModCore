@@ -21,13 +21,11 @@ import java.util.*;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class GlRenderContext extends RenderCtx {
-    private FloatBuffer colorObj;
-    private FloatBuffer matrixObj = null;
+    private FloatBuffer internalBuffer;
 
     public GlRenderContext() {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) {
-            colorObj = BufferUtils.createFloatBuffer(16);
-            matrixObj = BufferUtils.createFloatBuffer(16);
+            internalBuffer = BufferUtils.createFloatBuffer(16);
         }
     }
 
@@ -42,14 +40,14 @@ public class GlRenderContext extends RenderCtx {
         }
         if (state.model_view != null) {
             GL11.glPushMatrix();
-            multMatrix(state.model_view.copy().transpose());
+            mulMatrix(state.model_view.copy().transpose());
             restore.add(GL11::glPopMatrix);
         }
         if (state.projection != null) {
             // Since we use the projection matrix so little, we assume that we are always defaulted to MODELVIEW
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPushMatrix();
-            multMatrix(state.projection.copy().transpose());
+            mulMatrix(state.projection.copy().transpose());
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             restore.add(() -> {
                 GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -174,8 +172,8 @@ public class GlRenderContext extends RenderCtx {
         if (state.color != null) {
             boolean oldColorMaterial = GL11.glGetBoolean(GL11.GL_COLOR_MATERIAL);
             applyBool(GL11.GL_COLOR_MATERIAL, true);
-            GL11.glGetFloat(GL11.GL_CURRENT_COLOR, colorObj);
-            float[] oldColor = new float[] {colorObj.get(0), colorObj.get(1), colorObj.get(2), colorObj.get(3)};
+            GL11.glGetFloat(GL11.GL_CURRENT_COLOR, internalBuffer);
+            float[] oldColor = new float[] {internalBuffer.get(0), internalBuffer.get(1), internalBuffer.get(2), internalBuffer.get(3)};
             GL11.glColor4f(state.color[0], state.color[1], state.color[2], state.color[3]);
             restore.add(() -> {
                 GL11.glColor4f(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
@@ -251,16 +249,16 @@ public class GlRenderContext extends RenderCtx {
         return () -> restore.forEach(Runnable::run);
     }
 
-    private void multMatrix(Matrix4 matrix) {
-        matrixObj.position(0);
-        matrixObj.put(new float[]{
+    private void mulMatrix(Matrix4 matrix) {
+        internalBuffer.position(0);
+        internalBuffer.put(new float[]{
                 (float) matrix.m00, (float) matrix.m01, (float) matrix.m02, (float) matrix.m03,
                 (float) matrix.m10, (float) matrix.m11, (float) matrix.m12, (float) matrix.m13,
                 (float) matrix.m20, (float) matrix.m21, (float) matrix.m22, (float) matrix.m23,
                 (float) matrix.m30, (float) matrix.m31, (float) matrix.m32, (float) matrix.m33
         });
-        matrixObj.flip();
-        GL11.glMultMatrix(matrixObj);
+        internalBuffer.flip();
+        GL11.glMultMatrix(internalBuffer);
     }
 
     static void applyBool(int glOptCode, boolean state) {

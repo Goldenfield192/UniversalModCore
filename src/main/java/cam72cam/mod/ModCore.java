@@ -248,7 +248,7 @@ public class ModCore {
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
-                    RenderCtx.setInstance(new GlRenderContext());
+                    RenderCtx.init(new GlRenderContext());
                     break;
                 case SETUP:
                     ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {

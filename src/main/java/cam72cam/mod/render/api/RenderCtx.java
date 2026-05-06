@@ -6,7 +6,7 @@ import cam72cam.mod.util.With;
 public abstract class RenderCtx {
     private static RenderCtx INSTANCE;
 
-    public static void setInstance(RenderCtx instance) {
+    public static void init(RenderCtx instance) {
         INSTANCE = instance;
     }
 
