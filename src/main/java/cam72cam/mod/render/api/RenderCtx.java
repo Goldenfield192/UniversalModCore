@@ -16,6 +16,8 @@ public abstract class RenderCtx {
 
     public abstract With apply(RenderState state);
 
+    public abstract Object checkError();
+
     public enum Stage {
         BLOCK,
 

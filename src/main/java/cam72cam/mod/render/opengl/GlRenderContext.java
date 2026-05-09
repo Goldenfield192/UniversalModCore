@@ -1,5 +1,6 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.render.api.RenderCtx;
@@ -259,6 +260,43 @@ public class GlRenderContext extends RenderCtx {
         });
         internalBuffer.flip();
         GL11.glMultMatrix(internalBuffer);
+    }
+
+    public Object checkError() {
+        int err = GL11.glGetError();
+        if (err != 0) {
+            String str;
+            switch (err) {
+                case GL11.GL_INVALID_ENUM:
+                    str =  "GL_INVALID_ENUM";
+                    break;
+                case GL11.GL_INVALID_VALUE:
+                    str =  "GL_INVALID_VALUE";
+                    break;
+                case GL11.GL_INVALID_OPERATION:
+                    str =  "GL_INVALID_OPERATION";
+                    break;
+                case GL11.GL_STACK_OVERFLOW:
+                    str =  "GL_STACK_OVERFLOW";
+                    break;
+                case GL11.GL_STACK_UNDERFLOW:
+                    str =  "GL_STACK_UNDERFLOW";
+                    break;
+                case GL11.GL_OUT_OF_MEMORY:
+                    str =  "GL_OUT_OF_MEMORY";
+                    break;
+                case 0x0506:
+                    str =  "GL_INVALID_FRAMEBUFFER_OPERATION";
+                    break;
+                case 0x0507:
+                    str =  "GL_CONTEXT_LOST";
+                    break;
+                default:
+                    str =  "UNKNOWN_ERROR";
+            };
+            ModCore.error("We broke something: %s", str);
+        }
+        return null;
     }
 
     static void applyBool(int glOptCode, boolean state) {
