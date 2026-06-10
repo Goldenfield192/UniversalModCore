@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.resources.FolderResourcePack;
+import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLFolderResourcePack;
 import net.minecraftforge.fml.common.*;
@@ -20,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -121,9 +123,6 @@ public class UMCModContainer extends DummyModContainer {
         }
         modClassLoader.clearNegativeCacheFor(candidate.getClassList());
 
-        //Only place I could think to add this...
-        MinecraftForge.preloadCrashClasses(event.getASMHarvestedData(), getModId(), candidate.getClassList());
-
         Class<?> clazz;
         try
         {
@@ -224,12 +223,6 @@ public class UMCModContainer extends DummyModContainer {
                     throw exception;
                 }
             }
-        }
-
-        @Override
-        public BufferedImage getPackImage() throws IOException
-        {
-            return ImageIO.read(getInputStreamByName(container.getMetadata().logoFile));
         }
 
         @Override

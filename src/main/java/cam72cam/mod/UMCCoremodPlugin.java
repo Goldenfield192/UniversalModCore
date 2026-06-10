@@ -8,14 +8,15 @@ import org.spongepowered.asm.mixin.Mixins;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
-public class UMCMixinPlugin implements IFMLLoadingPlugin {
-    public UMCMixinPlugin() {
+public class UMCCoremodPlugin implements IFMLLoadingPlugin {
+    public UMCCoremodPlugin() {
         MixinBootstrap.init();
         Mixins.addConfiguration("mixins.feat.universalmodcore.json");
         Mixins.addConfiguration("mixins.fix.universalmodcore.json");
@@ -23,10 +24,22 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
         CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
         if (codeSource != null) {
             URL location = codeSource.getLocation();
+            String urlStr = location.toString();
+
+            if (urlStr.startsWith("jar:")) {
+                int separatorIndex = urlStr.indexOf("!/");
+                if (separatorIndex != -1) {
+                    String jarUrlStr = urlStr.substring("jar:".length(), separatorIndex);
+                    try {
+                        location = new URL(jarUrlStr);
+                    } catch (MalformedURLException ignored) {}
+                }
+            }
+
             try {
                 File file = new File(location.toURI());
                 if (file.isFile() && !CoreModManager.getReparseableCoremods().contains(file.getName())) {
-                    //Due to FML's bad behaviour on processing FMLCorePluginContainsFMLMod we add here manually
+                    //Due to FML's bad behavior on processing FMLCorePluginContainsFMLMod we add here manually
                     CoreModManager.getIgnoredMods().remove(file.getName());
                     if (!ModCore.isDevelopmentEnvironment()) {
                         CoreModManager.getReparseableCoremods().add(file.getName());
@@ -40,7 +53,7 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[0];
+        return new String[] {"cam72cam.mod.loader.ProxyTransformer"};
     }
 
     @Override
