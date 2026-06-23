@@ -145,15 +145,15 @@ public abstract class Packet {
         @Override
         public void fromBytes(ByteBuf buf) {
             TagCompound data = new TagCompound(ByteBufUtils.readTag(buf));
-            String cls = data.getString("cam72cam.mod.pktid");
-            packet = packetFactories.get(cls).get();
+            String id = data.getString("cam72cam.mod.pktid");
+            packet = packetFactories.get(id).get();
             packet.data = data;
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
             TagCompound data = new TagCompound();
-            data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            data.setString("cam72cam.mod.pktid", packet.id);
             try {
                 TagSerializer.serialize(data, packet);
             } catch (SerializationException e) {
@@ -182,7 +182,7 @@ public abstract class Packet {
             }
             if (message.packet.getPlayer() == null) {
                 try {
-                    throw new Exception(String.format("Invalid Packet %s: missing player", message.packet.getClass()));
+                    throw new Exception(String.format("Invalid Packet %s: missing player", message.packet.id));
                 } catch (Exception e) {
                     ModCore.catching(e);
                     return;
