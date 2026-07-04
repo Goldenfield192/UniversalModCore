@@ -3,7 +3,7 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.obj.OBJTextureSheet;
+import cam72cam.mod.render.obj.CachedTexture;
 import cam72cam.mod.render.obj.OBJRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
@@ -24,14 +24,14 @@ import java.util.stream.Collectors;
 import static cam72cam.mod.model.obj.ImageUtils.*;
 
 public class OBJModel {
-    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
+    private static final CachedTexture defTex = new CachedTexture(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
     public final OBJRender vbo;
     public final int textureWidth;
     public final int textureHeight;
     public final int defaultLodSize;
-    public final Map<String, Map<Integer, OBJTextureSheet>> textures = new HashMap<>();
-    public final Map<String, Map<Integer, OBJTextureSheet>> normals = new HashMap<>();
-    public final Map<String, Map<Integer, OBJTextureSheet>> speculars = new HashMap<>();
+    public final Map<String, Map<Integer, CachedTexture>> textures = new HashMap<>();
+    public final Map<String, Map<Integer, CachedTexture>> normals = new HashMap<>();
+    public final Map<String, Map<Integer, CachedTexture>> speculars = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
     public final boolean isSmoothShading;
 
@@ -112,7 +112,7 @@ public class OBJModel {
 
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
                 ModCore.debug("%s : tex %s", modelLoc, variant);
-                Map<Integer, OBJTextureSheet> baseTexLodMap = new HashMap<>();
+                Map<Integer, CachedTexture> baseTexLodMap = new HashMap<>();
 
                 int texSize = Math.max(textureWidth, textureHeight);
                 Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba", builder -> {
@@ -128,7 +128,7 @@ public class OBJModel {
                     }
                     return new GenericByteBuffer(toRGBA(img));
                 });
-                baseTexLodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
+                baseTexLodMap.put(texSize, new CachedTexture(textureWidth, textureHeight, texData, cacheSeconds));
 
                 for (Integer lodValue : lodValues) {
                     if (lodValue < texSize) {
@@ -136,13 +136,13 @@ public class OBJModel {
                         Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.rgba", lodValue),
                                 builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
                         );
-                        baseTexLodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds));
+                        baseTexLodMap.put(lodValue, new CachedTexture(size.getLeft(), size.getRight(), lodData, cacheSeconds));
                     }
                 }
                 this.textures.put(variant, baseTexLodMap);
 
                 if (hasNormals) {
-                    Map<Integer, OBJTextureSheet> normalTexLodMap = new HashMap<>();
+                    Map<Integer, CachedTexture> normalTexLodMap = new HashMap<>();
                     try {
                         Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> {
                             BufferedImage img = builder.getNormals().get(variant).get();
@@ -157,14 +157,14 @@ public class OBJModel {
                             }
                             return new GenericByteBuffer(toRGBA(img));
                         });
-                        normalTexLodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
+                        normalTexLodMap.put(texSize, new CachedTexture(textureWidth, textureHeight, normData, cacheSeconds));
 
                         for (Integer lodValue : lodValues) {
                             if (lodValue < texSize) {
                                 Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
                                 Supplier<GenericByteBuffer> lodNormData = cache.getResource(variant + "_" + lodValue + ".norm",
                                         builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getNormals().get(variant).get(), lodValue))));
-                                normalTexLodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodNormData, cacheSeconds));
+                                normalTexLodMap.put(lodValue, new CachedTexture(size.getLeft(), size.getRight(), lodNormData, cacheSeconds));
                             }
                         }
                         this.normals.put(variant, normalTexLodMap);
@@ -174,7 +174,7 @@ public class OBJModel {
                 }
 
                 if (hasSpeculars) {
-                    Map<Integer, OBJTextureSheet> specularTexLodMap = new HashMap<>();
+                    Map<Integer, CachedTexture> specularTexLodMap = new HashMap<>();
                     try {
                         Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> {
                             BufferedImage img = builder.getSpeculars().get(variant).get();
@@ -189,14 +189,14 @@ public class OBJModel {
                             }
                             return new GenericByteBuffer(toRGBA(img));
                         });
-                        specularTexLodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
+                        specularTexLodMap.put(texSize, new CachedTexture(textureWidth, textureHeight, specData, cacheSeconds));
 
                         for (Integer lodValue : lodValues) {
                             if (lodValue < texSize) {
                                 Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
                                 Supplier<GenericByteBuffer> lodSpecData = cache.getResource(variant + "_" + lodValue + ".spec",
                                         builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getSpeculars().get(variant).get(), lodValue))));
-                                specularTexLodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodSpecData, cacheSeconds));
+                                specularTexLodMap.put(lodValue, new CachedTexture(size.getLeft(), size.getRight(), lodSpecData, cacheSeconds));
                             }
                         }
                         this.speculars.put(variant, specularTexLodMap);
@@ -325,7 +325,7 @@ public class OBJModel {
                 texName = ""; // Default
             }
 
-            OBJTextureSheet tex = OBJModel.this.textures.get(texName).get(lodSize);
+            CachedTexture tex = OBJModel.this.textures.get(texName).get(lodSize);
             if (tex == null) {
                 tex = OBJModel.this.textures.get(texName).get(defaultLodSize);
             }
@@ -348,9 +348,9 @@ public class OBJModel {
                 }
             }
 
-            OBJTextureSheet normTex = null;
+            CachedTexture normTex = null;
             if (OBJModel.this.normals.containsKey(texName)) {
-                Map<Integer, OBJTextureSheet> normLodMap = OBJModel.this.normals.get(texName);
+                Map<Integer, CachedTexture> normLodMap = OBJModel.this.normals.get(texName);
                 normTex = normLodMap.get(lodSize);
                 if (normTex == null) {
                     normTex = normLodMap.get(defaultLodSize);
@@ -376,9 +376,9 @@ public class OBJModel {
                 state.normals(defTex);
             }
 
-            OBJTextureSheet specTex = null;
+            CachedTexture specTex = null;
             if (OBJModel.this.speculars.containsKey(texName)) {
-                Map<Integer, OBJTextureSheet> specLodMap = OBJModel.this.speculars.get(texName);
+                Map<Integer, CachedTexture> specLodMap = OBJModel.this.speculars.get(texName);
                 specTex = specLodMap.get(lodSize);
                 if (specTex == null) {
                     specTex = specLodMap.get(defaultLodSize);
@@ -423,8 +423,8 @@ public class OBJModel {
     }
 
     public void free() {
-        for (Map<Integer, OBJTextureSheet> lodMap : textures.values()) {
-            for (OBJTextureSheet texture : lodMap.values()) {
+        for (Map<Integer, CachedTexture> lodMap : textures.values()) {
+            for (CachedTexture texture : lodMap.values()) {
                 texture.dealloc();
             }
         }

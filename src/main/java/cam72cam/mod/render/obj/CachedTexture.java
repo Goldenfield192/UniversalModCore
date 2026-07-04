@@ -7,10 +7,10 @@ import net.minecraft.client.renderer.GLAllocation;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
-public class OBJTextureSheet extends CustomTexture {
+public class CachedTexture extends CustomTexture {
     private final Supplier<ResourceCache.GenericByteBuffer> data;
 
-    public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds) {
+    public CachedTexture(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds) {
         super(width, height, cacheSeconds);
         this.data = data;
     }
