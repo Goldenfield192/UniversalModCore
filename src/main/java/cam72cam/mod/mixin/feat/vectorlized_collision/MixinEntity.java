@@ -50,8 +50,12 @@ public abstract class MixinEntity {
             }
         }
         x1.set(iter.x);
-        //TODO stuck in ground
-        y1.set(flag ? 0 : iter.y);
+//        if (flag) {
+//            //TODO stuck in ground
+//            y1.set(0);
+//        } else {
+            y1.set(iter.y);
+//        }
         z1.set(iter.z);
         xR.set(iter.x);
         zR.set(iter.z);

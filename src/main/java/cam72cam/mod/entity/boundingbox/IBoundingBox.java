@@ -24,6 +24,9 @@ public interface IBoundingBox {
         ) {
             return BLOCK;
         }
+        if (internal instanceof IOrientedBB) {
+            return new OrientedBoundingBox((IOrientedBB) internal);
+        }
         return new DefaultBoundingBox(internal);
     }
 
@@ -61,12 +64,15 @@ public interface IBoundingBox {
         return new Vec3d(calculateXOffset(other, velocity.x), calculateYOffset(other, velocity.y), calculateZOffset(other, velocity.z));
     }
 
+    /** Use {@link IBoundingBox#adjustMovement(IBoundingBox, Vec3d)} */
     @Deprecated
     double calculateXOffset(IBoundingBox other, double offsetX);
 
+    /** Use {@link IBoundingBox#adjustMovement(IBoundingBox, Vec3d)} */
     @Deprecated
     double calculateYOffset(IBoundingBox other, double offsetY);
 
+    /** Use {@link IBoundingBox#adjustMovement(IBoundingBox, Vec3d)} */
     @Deprecated
     double calculateZOffset(IBoundingBox other, double offsetZ);
 

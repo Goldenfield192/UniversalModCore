@@ -66,15 +66,19 @@ public class DefaultBoundingBox implements IBoundingBox {
                          internal.calculateZOffset(aabb, velocity.z));
     }
 
+    @Deprecated
+    @Override
     public double calculateXOffset(IBoundingBox other, double offsetX) {
         return internal.calculateXOffset(BoundingBox.from(other), offsetX);
     }
 
+    @Deprecated
     @Override
     public double calculateYOffset(IBoundingBox other, double offsetY) {
         return internal.calculateYOffset(BoundingBox.from(other), offsetY);
     }
 
+    @Deprecated
     @Override
     public double calculateZOffset(IBoundingBox other, double offsetZ) {
         return internal.calculateZOffset(BoundingBox.from(other), offsetZ);
