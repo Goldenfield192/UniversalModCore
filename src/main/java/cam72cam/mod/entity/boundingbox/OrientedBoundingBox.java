@@ -2,77 +2,58 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Matrix3;
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.util.math.AxisAlignedBB;
 
 public class OrientedBoundingBox implements IBoundingBox, IOrientedBB {
     private static final double EPSILON = 1.0E-6;
 
     private final Vec3d center;
-    private final Vec3d extent;
+    /** Distance from {@link #center} to the negative face along each local axis. */
+    private final Vec3d extentNeg;
+    /** Distance from {@link #center} to the positive face along each local axis. */
+    private final Vec3d extentPos;
     private final Matrix3 rotation;
 
-    // Cached results — recomputed lazily; cached-right/up/forward serve as version tags
-    // to detect matrix mutations (e.g. if a setRotation() method is added in the future).
+    // Lazy caches. Safe because the box is treated as immutable.
+    private Box box;
+    private Vec3d cachedWorldExtent;
     private Vec3d cachedMin;
     private Vec3d cachedMax;
-    private Vec3d cachedWorldExtent;
 
-    public OrientedBoundingBox(Vec3d center, Vec3d extent, Matrix3 rotation) {
+    public OrientedBoundingBox(Vec3d center, Vec3d extentNeg, Vec3d extentPos, Matrix3 rotation) {
         this.center = center;
-        this.extent = extent;
+        this.extentNeg = extentNeg;
+        this.extentPos = extentPos;
         this.rotation = rotation.copy();
     }
 
-    public OrientedBoundingBox(IOrientedBB other) {
-        this(other.center(), other.extent(), other.rotation());
+    /** Convenience constructor for a symmetric box centered on {@code center}. */
+    public OrientedBoundingBox(Vec3d center, Vec3d extent, Matrix3 rotation) {
+        this(center, extent, extent, rotation);
     }
 
+    public OrientedBoundingBox(IOrientedBB other) {
+        this(other.center(), other.extentNeg(), other.extentPos(), other.rotation());
+    }
+
+    /** Build an OBB snapshot of any box; AABBs get an identity rotation. */
     public static OrientedBoundingBox from(IBoundingBox bb) {
         if (bb instanceof IOrientedBB) {
-            return new OrientedBoundingBox((IOrientedBB)bb);
+            return new OrientedBoundingBox((IOrientedBB) bb);
         }
-        return new OrientedBoundingBox(bb.center(), bb.max().subtract(bb.center()), new Matrix3());
+        Vec3d min = bb.min();
+        Vec3d max = bb.max();
+        Vec3d center = new Vec3d((min.x + max.x) * 0.5, (min.y + max.y) * 0.5, (min.z + max.z) * 0.5);
+        Vec3d extent = new Vec3d((max.x - min.x) * 0.5, (max.y - min.y) * 0.5, (max.z - min.z) * 0.5);
+        return new OrientedBoundingBox(center, extent, extent, new Matrix3());
     }
 
     public static OrientedBoundingBox from(Vec3d extent, Vec3d center) {
-        return new OrientedBoundingBox(center, extent, new Matrix3());
+        return new OrientedBoundingBox(center, extent, extent, new Matrix3());
     }
 
-    /**
-     * Compute the world-space half-extent of the enclosing AABB by projecting the OBB onto world axes.
-     * For each world axis, the projected extent is the sum of absolute dot products of OBB axes scaled by extent.
-     * Result is cached; cache is invalidated when rotation basis vectors change.
-     */
-    private Vec3d worldExtent() {
-        Vec3d r = rotation.right();
-        Vec3d u = rotation.up();
-        Vec3d f = rotation.forward();
-
-        // Check version tags — if basis vectors haven't changed, return cached value
-        if (cachedWorldExtent != null) {
-            return cachedWorldExtent;
-        }
-
-        Vec3d result = new Vec3d(
-            Math.abs(r.x) * extent.x + Math.abs(u.x) * extent.y + Math.abs(f.x) * extent.z,
-            Math.abs(r.y) * extent.x + Math.abs(u.y) * extent.y + Math.abs(f.y) * extent.z,
-            Math.abs(r.z) * extent.x + Math.abs(u.z) * extent.y + Math.abs(f.z) * extent.z
-        );
-
-        // Update cache and version tags
-        cachedWorldExtent = result;
-        cachedMin = center.subtract(result);
-        cachedMax = center.add(result);
-
-        return result;
-    }
-
-    @Override
-    public Vec3d min() {
-        // warm the cache by computing worldExtent, then return cached min
-        worldExtent();
-        return cachedMin;
-    }
+    // ------------------------------------------------------------------
+    // Basic accessors
+    // ------------------------------------------------------------------
 
     @Override
     public Vec3d center() {
@@ -80,236 +61,116 @@ public class OrientedBoundingBox implements IBoundingBox, IOrientedBB {
     }
 
     @Override
+    public Vec3d extentNeg() {
+        return extentNeg;
+    }
+
+    @Override
+    public Vec3d extentPos() {
+        return extentPos;
+    }
+
+    @Override
+    public Matrix3 rotation() {
+        return rotation;
+    }
+
+    /**
+     * World-space geometric center of the box (the point the box is symmetric about):
+     * {@code center + rotation * ((extentPos - extentNeg) / 2)}.
+     */
+    private Vec3d geometricCenter() {
+        Vec3d offset = extentPos.subtract(extentNeg).scale(0.5);
+        return center.add(rotation.apply(offset));
+    }
+
+    /** Symmetric half-extent about the geometric center: {@code (extentNeg + extentPos) / 2}. */
+    private Vec3d halfExtent() {
+        return new Vec3d(
+                (extentNeg.x + extentPos.x) * 0.5,
+                (extentNeg.y + extentPos.y) * 0.5,
+                (extentNeg.z + extentPos.z) * 0.5);
+    }
+
+    @Override
+    public Vec3d min() {
+        worldExtent();
+        return cachedMin;
+    }
+
+    @Override
     public Vec3d max() {
-        // warm the cache by computing worldExtent, then return cached max
         worldExtent();
         return cachedMax;
     }
 
+    public OrientedBoundingBox copy() {
+        return new OrientedBoundingBox(center, extentNeg, extentPos, rotation);
+    }
+
+    // ------------------------------------------------------------------
+    // Shape modifiers
+    // ------------------------------------------------------------------
+
     @Override
     public IBoundingBox expand(Vec3d val) {
-        // expand works on world-space sides — apply to enclosing AABB and return as AABB
-        Vec3d half = worldExtent();
-        double minX = center.x - half.x;
-        double minY = center.y - half.y;
-        double minZ = center.z - half.z;
-        double maxX = center.x + half.x;
-        double maxY = center.y + half.y;
-        double maxZ = center.z + half.z;
-
-        if (val.x < 0) { minX += val.x; } else { maxX += val.x; }
-        if (val.y < 0) { minY += val.y; } else { maxY += val.y; }
-        if (val.z < 0) { minZ += val.z; } else { maxZ += val.z; }
-
-        return IBoundingBox.from(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ));
+        return moveFaces(val, true);
     }
 
     @Override
     public IBoundingBox contract(Vec3d val) {
-        // contract is the opposite of expand: positive val pulls the positive face in
-        Vec3d half = worldExtent();
-        double minX = center.x - half.x;
-        double minY = center.y - half.y;
-        double minZ = center.z - half.z;
-        double maxX = center.x + half.x;
-        double maxY = center.y + half.y;
-        double maxZ = center.z + half.z;
+        return moveFaces(val, false);
+    }
 
-        if (val.x < 0) { maxX += val.x; } else { minX += val.x; }
-        if (val.y < 0) { maxY += val.y; } else { minY += val.y; }
-        if (val.z < 0) { maxZ += val.z; } else { minZ += val.z; }
+    /**
+     * expand() grows the enclosing AABB outwards by {@code val} (sign-dependent per face),
+     * contract() is its inverse. Both operate on the world-aligned enclosing box and
+     * therefore return a plain AABB.
+     */
+    private IBoundingBox moveFaces(Vec3d val, boolean expand) {
+        Vec3d min = min();
+        Vec3d max = max();
+        double minX = min.x;
+        double minY = min.y;
+        double minZ = min.z;
+        double maxX = max.x;
+        double maxY = max.y;
+        double maxZ = max.z;
+
+        if (expand) {
+            if (val.x < 0) { minX += val.x; } else { maxX += val.x; }
+            if (val.y < 0) { minY += val.y; } else { maxY += val.y; }
+            if (val.z < 0) { minZ += val.z; } else { maxZ += val.z; }
+        } else {
+            if (val.x < 0) { maxX += val.x; } else { minX += val.x; }
+            if (val.y < 0) { maxY += val.y; } else { minY += val.y; }
+            if (val.z < 0) { maxZ += val.z; } else { minZ += val.z; }
+        }
 
         return IBoundingBox.from(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ));
     }
 
     @Override
     public IBoundingBox grow(Vec3d val) {
-        // grow() expands symmetrically — apply to extent in local space
-        double nx = Math.max(0, extent.x + val.x);
-        double ny = Math.max(0, extent.y + val.y);
-        double nz = Math.max(0, extent.z + val.z);
-        return new OrientedBoundingBox(center, new Vec3d(nx, ny, nz), rotation);
+        return new OrientedBoundingBox(center,
+                new Vec3d(Math.max(0, extentNeg.x + val.x), Math.max(0, extentNeg.y + val.y), Math.max(0, extentNeg.z + val.z)),
+                new Vec3d(Math.max(0, extentPos.x + val.x), Math.max(0, extentPos.y + val.y), Math.max(0, extentPos.z + val.z)),
+                rotation);
     }
 
     @Override
     public IBoundingBox offset(Vec3d vec3d) {
-        return new OrientedBoundingBox(center.add(vec3d), extent, rotation);
+        return new OrientedBoundingBox(center.add(vec3d), extentNeg, extentPos, rotation);
     }
+
+    // ------------------------------------------------------------------
+    // Movement adjustment (3D vectorized collision response)
+    // ------------------------------------------------------------------
 
     @Override
     public Vec3d adjustMovement(IBoundingBox other, Vec3d velocity) {
-        if (other instanceof IOrientedBB) {
-            return adjustMovementOBB((IOrientedBB) other, velocity);
-        }
-        IOrientedBB otherBB = OrientedBoundingBox.from(other);
-        return adjustMovementOBB(otherBB, velocity);
-    }
-    /**
-     * 计算 OBB 与 OBB 之间的最小平移向量 (MTV)，用于分离两个相交的 OBB。
-     * 返回从 moving (this) 指向远离 static (other) 的向量，若无相交则返回 null。
-     */
-    private static Vec3d obbMTV(Vec3d c1, Vec3d e1, Matrix3 r1,
-                                Vec3d c2, Vec3d e2, Matrix3 r2) {
-        Vec3d t = c1.subtract(c2);  // moving 中心指向 static 中心
-        Vec3d[] a = {r1.right(), r1.up(), r1.forward()};
-        Vec3d[] b = {r2.right(), r2.up(), r2.forward()};
-
-        double minOverlap = Double.POSITIVE_INFINITY;
-        Vec3d bestNormal = null;
-        double bestSign = 1.0;
-
-        // 15 条分离轴：3 + 3 + 9 条边叉积
-        Vec3d[] axes = new Vec3d[15];
-        int idx = 0;
-        // A 的3个面法线
-        for (int i = 0; i < 3; i++) axes[idx++] = a[i];
-        // B 的3个面法线
-        for (int j = 0; j < 3; j++) axes[idx++] = b[j];
-        // 9条边叉积
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                Vec3d cross = a[i].crossProduct(b[j]);
-                if (cross.lengthSquared() >= EPSILON) {
-                    axes[idx++] = cross;
-                }
-            }
-        }
-
-        for (int i = 0; i < idx; i++) {
-            Vec3d axis = axes[i];
-            double len = axis.length();
-            if (len < EPSILON) continue;
-            Vec3d n = axis.scale(1.0 / len); // 归一化
-
-            // 计算两个 OBB 在法线上的投影半径和中心距离
-            double ra = Math.abs(n.dotProduct(a[0])) * e1.x
-                    + Math.abs(n.dotProduct(a[1])) * e1.y
-                    + Math.abs(n.dotProduct(a[2])) * e1.z;
-            double rb = Math.abs(n.dotProduct(b[0])) * e2.x
-                    + Math.abs(n.dotProduct(b[1])) * e2.y
-                    + Math.abs(n.dotProduct(b[2])) * e2.z;
-            double d = Math.abs(t.dotProduct(n));  // 中心投影距离
-            double overlap = ra + rb - d;
-            if (overlap > 0 && overlap < minOverlap) {
-                minOverlap = overlap;
-                bestNormal = n;
-                // 记录 moving 相对于 static 在法线上的方向：若 t·n > 0，说明 moving 在正方向，MTV 应为 +n
-                bestSign = t.dotProduct(n) >= 0 ? 1.0 : -1.0;
-            }
-        }
-
-        if (bestNormal == null || minOverlap <= EPSILON) {
-            return null;
-        }
-        return bestNormal.scale(bestSign * minOverlap);
-    }
-
-    /**
-     * OBB vs OBB 碰撞响应，支持沿表面滑动。
-     * 反复进行“安全移动→获取法线→剥离法线速度”迭代。
-     */
-    private Vec3d adjustMovementOBB(IOrientedBB other, Vec3d velocity) {
-        Vec3d startCenter = this.center;                // 本 OBB 的起始中心
-        Vec3d movingCenter = startCenter;               // 当前移动后的中心
-        Vec3d remaining = velocity;                      // 剩余未处理的速度
-        final int MAX_ITER = 10;                         // 防止无限循环
-
-        for (int iter = 0; iter < MAX_ITER; iter++) {
-            if (remaining.lengthSquared() < EPSILON) break;
-
-            // 二分查找当前剩余方向上的最大安全位移比例
-            double lo = 0.0, hi = 1.0;
-            for (int i = 0; i < 8; i++) {
-                double mid = (lo + hi) / 2.0;
-                Vec3d testCenter = movingCenter.add(remaining.scale(mid));
-                if (obbIntersects(testCenter, extent, rotation,
-                                  other.center(), other.extent(), other.rotation())) {
-                    hi = mid;
-                } else {
-                    lo = mid;
-                }
-            }
-
-            // 移动安全部分
-            if (lo > EPSILON) {
-                movingCenter = movingCenter.add(remaining.scale(lo));
-                remaining = remaining.scale(1.0 - lo);
-            }
-
-            if (remaining.lengthSquared() < EPSILON) break;
-
-            // 此时与障碍物接触，计算最小平移向量（MTV）
-            Vec3d mtv = obbMTV(movingCenter, extent, rotation,
-                               other.center(), other.extent(), other.rotation());
-            if (mtv == null) {
-                // 理论上不应为 null，若出现则停止
-                break;
-            }
-
-            // 碰撞法线：从静态 OBB 指向移动 OBB
-            Vec3d normal = mtv.normalize();
-
-            // 剥离剩余速度中朝向表面法线的分量（实现滑动）
-            double dot = remaining.dotProduct(normal);
-            if (dot < 0.0) {
-                remaining = remaining.subtract(normal.scale(dot));
-                // 微移防止浮点误差导致下次仍判定为相交
-                movingCenter = movingCenter.add(normal.scale(EPSILON * 100));
-            } else {
-                // 速度已背离表面，无需处理
-                break;
-            }
-        }
-
-        // 返回实际发生的位移（从原中心到最终中心）
-        return movingCenter.subtract(startCenter);
-    }
-
-    /**
-     * OBB vs OBB Separating Axis Theorem intersection test.
-     * Tests 15 potential separating axes:
-     *   6 face normals (3 from each OBB) + 9 cross products of edge pairs.
-     */
-    private static boolean obbIntersects(Vec3d c1, Vec3d e1, Matrix3 r1,
-                                         Vec3d c2, Vec3d e2, Matrix3 r2) {
-        Vec3d t = c2.subtract(c1);
-        Vec3d[] a = {r1.right(), r1.up(), r1.forward()};
-        Vec3d[] b = {r2.right(), r2.up(), r2.forward()};
-
-        // Face axes of A
-        for (int i = 0; i < 3; i++) {
-            if (separatedOBB(a[i], t, a, e1, b, e2)) return false;
-        }
-        // Face axes of B
-        for (int j = 0; j < 3; j++) {
-            if (separatedOBB(b[j], t, a, e1, b, e2)) return false;
-        }
-        // Cross‑product axes
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                Vec3d cross = a[i].crossProduct(b[j]);
-                if (cross.lengthSquared() < EPSILON) continue;
-                if (separatedOBB(cross, t, a, e1, b, e2)) return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Test a single SAT axis for OBB vs OBB: project both boxes and check for a gap.
-     * ra = sum(|a[k] · L| * ae_k), rb = sum(|b[k] · L| * be_k), d = |t · L|.
-     */
-    private static boolean separatedOBB(Vec3d L, Vec3d t,
-                                        Vec3d[] a, Vec3d ae,
-                                        Vec3d[] b, Vec3d be) {
-        double ra = Math.abs(a[0].dotProduct(L)) * ae.x
-                  + Math.abs(a[1].dotProduct(L)) * ae.y
-                  + Math.abs(a[2].dotProduct(L)) * ae.z;
-        double rb = Math.abs(b[0].dotProduct(L)) * be.x
-                  + Math.abs(b[1].dotProduct(L)) * be.y
-                  + Math.abs(b[2].dotProduct(L)) * be.z;
-        double d  = Math.abs(t.dotProduct(L));
-        return d > ra + rb + EPSILON;
+        //Other with velocity tries to move and this is obstacle, return corrected movement
+        return resolveCollision(of(other), box(), velocity);
     }
 
     @Override
@@ -328,80 +189,91 @@ public class OrientedBoundingBox implements IBoundingBox, IOrientedBB {
     }
 
     /**
-     * OBB vs AABB intersection test using Separating Axis Theorem.
-     * Tests 15 potential separating axes:
-     *   - 3 AABB face normals (world axes)
-     *   - 3 OBB face normals (rotation basis vectors)
-     *   - 9 cross products of OBB axes with world axes
+     * Resolve the movement of {@code moving} (displaced by {@code velocity}) against the
+     * static obstacle {@code obstacle}. Returns the adjusted displacement vector.
+     *
+     * <p>The velocity is first decomposed onto the obstacle's local axes, then each axis is
+     * resolved sequentially with a binary search (like vanilla {@code calculateX/Y/ZOffset}).
+     * Working in the obstacle frame turns the obstacle into an axis-aligned box, so the
+     * resolved movement slides along the obstacle's faces. The result on each local axis is
+     * clamped to between {@code 0} and the input component, so it never reverses direction
+     * or exceeds the requested movement.</p>
      */
-    @Override
-    public boolean intersects(Vec3d min, Vec3d max) {
-        Vec3d r = rotation.right();
-        Vec3d u = rotation.up();
-        Vec3d f = rotation.forward();
+    private static Vec3d resolveCollision(Box moving, Box obstacle, Vec3d velocity) {
+        // Fixme bad movement
+        // Fast path: the destination is fully clear.
+        if (!intersects(moving, obstacle, velocity.x, velocity.y, velocity.z)) {
+            return velocity;
+        }
+        // Obstacle's local axes (columns of its rotation matrix).
+        Vec3d oRight = new Vec3d(obstacle.rx, obstacle.ry, obstacle.rz);
+        Vec3d oUp = new Vec3d(obstacle.ux, obstacle.uy, obstacle.uz);
+        Vec3d oForward = new Vec3d(obstacle.fx, obstacle.fy, obstacle.fz);
 
-        // OBB face axes
-        if (separatedOnAxis(r, min, max)) return false;
-        if (separatedOnAxis(u, min, max)) return false;
-        if (separatedOnAxis(f, min, max)) return false;
+        // Decompose velocity onto the obstacle's local axes.
+        double vLx = oRight.dotProduct(velocity);
+        double vLy = oUp.dotProduct(velocity);
+        double vLz = oForward.dotProduct(velocity);
 
-        // AABB face axes (world X, Y, Z)
-        if (separatedOnAxis(Vec3dX, min, max)) return false;
-        if (separatedOnAxis(Vec3dY, min, max)) return false;
-        if (separatedOnAxis(Vec3dZ, min, max)) return false;
+        // Resolve each local axis, accumulating world-space displacement.
+        double x = binarySearch(moving, obstacle, vLx, oRight, Vec3d.ZERO);
+        Vec3d afterX = oRight.scale(x);
+        double y = binarySearch(moving, obstacle, vLy, oUp, afterX);
+        Vec3d afterY = afterX.add(oUp.scale(y));
+        double z = binarySearch(moving, obstacle, vLz, oForward, afterY);
 
-        // Cross products of OBB axes with AABB axes
-        Vec3d[] obbAxes = {r, u, f};
-        Vec3d[] aabbAxes = {Vec3dX, Vec3dY, Vec3dZ};
-        for (Vec3d obbAxis : obbAxes) {
-            for (Vec3d aabbAxis : aabbAxes) {
-                Vec3d cross = obbAxis.crossProduct(aabbAxis);
-                if (cross.lengthSquared() < EPSILON) continue;
-                if (separatedOnAxis(cross, min, max)) return false;
+        return afterY.add(oForward.scale(z));
+    }
+
+    /**
+     * Binary search along one obstacle-local axis for the largest safe displacement of
+     * {@code moving} against {@code obstacle}, given the world-space displacement already
+     * applied on the previous axes ({@code baseWorld}). The result is clamped to between
+     * {@code 0} and {@code displacement}, so it never exceeds the requested input.
+     */
+    private static double binarySearch(Box moving, Box obstacle,
+                                       double displacement,
+                                       Vec3d axis, Vec3d baseWorld) {
+        if (displacement == 0) {
+            return 0;
+        }
+        // Full movement on this axis is unobstructed.
+        Vec3d full = baseWorld.add(axis.scale(displacement));
+        if (!intersects(moving, obstacle, full.x, full.y, full.z)) {
+            return displacement;
+        }
+        // Binary search for the maximum safe displacement.
+        double lo = 0;
+        double hi = displacement;
+        for (int i = 0; i < 16; i++) {
+            double mid = (lo + hi) * 0.5;
+            Vec3d test = baseWorld.add(axis.scale(mid));
+            if (intersects(moving, obstacle, test.x, test.y, test.z)) {
+                hi = mid;
+            } else {
+                lo = mid;
             }
         }
-
-        return true;
+        return lo;
     }
 
-    // Cached axis vectors for OBB-AABB SAT
-    private static final Vec3d Vec3dX = new Vec3d(1, 0, 0);
-    private static final Vec3d Vec3dY = new Vec3d(0, 1, 0);
-    private static final Vec3d Vec3dZ = new Vec3d(0, 0, 1);
+    // ------------------------------------------------------------------
+    // Intersection tests
+    // ------------------------------------------------------------------
 
-    /**
-     * Test a single SAT axis: project the OBB (center +- r*extent) and the AABB (min-max)
-     * onto the axis and check for a gap.
-     */
-    private boolean separatedOnAxis(Vec3d axis, Vec3d aabbMin, Vec3d aabbMax) {
-        // OBB projection: center · axis +- sum(|OBB_axis · axis| * extent)
-        double oCenter = axis.dotProduct(center);
-        double oRadius = Math.abs(axis.dotProduct(rotation.right())) * extent.x
-                       + Math.abs(axis.dotProduct(rotation.up())) * extent.y
-                       + Math.abs(axis.dotProduct(rotation.forward())) * extent.z;
-
-        // AABB projection: sum of min/max terms for each component
-        double aProj1 = axis.x * aabbMin.x + axis.y * aabbMin.y + axis.z * aabbMin.z;
-        double aProj2 = axis.x * aabbMax.x + axis.y * aabbMax.y + axis.z * aabbMax.z;
-        double aMin = Math.min(aProj1, aProj2);
-        double aMax = Math.max(aProj1, aProj2);
-
-        return aMin > oCenter + oRadius + EPSILON || oCenter - oRadius > aMax + EPSILON;
+    @Override
+    public boolean intersects(Vec3d min, Vec3d max) {
+        return intersectsAABB(box(), min.x, min.y, min.z, max.x, max.y, max.z);
     }
 
-    /**
-     * Dispatch intersection to the most appropriate algorithm:
-     * - OBB vs IOrientedBB → full SAT (15‑axis test)
-     * - OBB vs AABB        → SAT (implemented above)
-     */
     @Override
     public boolean intersects(IBoundingBox bounds) {
         if (bounds instanceof IOrientedBB) {
-            IOrientedBB o = (IOrientedBB) bounds;
-            return obbIntersects(center, extent, rotation, o.center(), o.extent(), o.rotation());
+            return intersects(box(), of(bounds), 0, 0, 0);
         }
-        // OBB vs AABB: use SAT
-        return this.intersects(bounds.min(), bounds.max());
+        Vec3d min = bounds.min();
+        Vec3d max = bounds.max();
+        return intersectsAABB(box(), min.x, min.y, min.z, max.x, max.y, max.z);
     }
 
     @Override
@@ -411,35 +283,35 @@ public class OrientedBoundingBox implements IBoundingBox, IOrientedBB {
         Vec3d otherMin = other.min();
         Vec3d otherMax = other.max();
 
-        //TODO OBB
+        // TODO OBB: currently expands the enclosing AABB, returns an AABB.
         return IBoundingBox.from(
-            new Vec3d(Math.min(myMin.x, otherMin.x), Math.min(myMin.y, otherMin.y), Math.min(myMin.z, otherMin.z)),
-            new Vec3d(Math.max(myMax.x, otherMax.x), Math.max(myMax.y, otherMax.y), Math.max(myMax.z, otherMax.z))
-        );
+                new Vec3d(Math.min(myMin.x, otherMin.x), Math.min(myMin.y, otherMin.y), Math.min(myMin.z, otherMin.z)),
+                new Vec3d(Math.max(myMax.x, otherMax.x), Math.max(myMax.y, otherMax.y), Math.max(myMax.z, otherMax.z)));
     }
 
     /**
-     * Ray vs OBB intersection using the slab method in OBB local space.
-     * Transforms the segment to local space, then tests against [-extent, +extent] AABB.
+     * Ray vs OBB intersection using the slab method in OBB local space:
+     * the segment is transformed into the box frame and tested against the
+     * asymmetric slab bounds [-extentNeg, +extentPos] on each local axis.
      */
     @Override
     public boolean intersectsSegment(Vec3d start, Vec3d end) {
-        Matrix3 inv = rotation.copy().transpose();
-        Vec3d localStart = inv.apply(start.subtract(center));
-        Vec3d localEnd = inv.apply(end.subtract(center));
-        Vec3d localDir = localEnd.subtract(localStart);
+        Vec3d ls = toLocal(start);
+        Vec3d le = toLocal(end);
+        double dx = le.x - ls.x;
+        double dy = le.y - ls.y;
+        double dz = le.z - ls.z;
 
-        // Use slab method on the local AABB [-extent, +extent]
         double tMin = 0.0;
         double tMax = 1.0;
 
-        // X slab
-        if (Math.abs(localDir.x) < EPSILON) {
-            if (localStart.x < -extent.x || localStart.x > extent.x) return false;
+        // X slab: box spans [-extentNeg.x, +extentPos.x] in local space
+        if (Math.abs(dx) < EPSILON) {
+            if (ls.x < -extentNeg.x || ls.x > extentPos.x) return false;
         } else {
-            double ood = 1.0 / localDir.x;
-            double t1 = (-extent.x - localStart.x) * ood;
-            double t2 = (extent.x - localStart.x) * ood;
+            double ood = 1.0 / dx;
+            double t1 = (-extentNeg.x - ls.x) * ood;
+            double t2 = (extentPos.x - ls.x) * ood;
             if (t1 > t2) { double tmp = t1; t1 = t2; t2 = tmp; }
             tMin = Math.max(tMin, t1);
             tMax = Math.min(tMax, t2);
@@ -447,12 +319,12 @@ public class OrientedBoundingBox implements IBoundingBox, IOrientedBB {
         }
 
         // Y slab
-        if (Math.abs(localDir.y) < EPSILON) {
-            if (localStart.y < -extent.y || localStart.y > extent.y) return false;
+        if (Math.abs(dy) < EPSILON) {
+            if (ls.y < -extentNeg.y || ls.y > extentPos.y) return false;
         } else {
-            double ood = 1.0 / localDir.y;
-            double t1 = (-extent.y - localStart.y) * ood;
-            double t2 = (extent.y - localStart.y) * ood;
+            double ood = 1.0 / dy;
+            double t1 = (-extentNeg.y - ls.y) * ood;
+            double t2 = (extentPos.y - ls.y) * ood;
             if (t1 > t2) { double tmp = t1; t1 = t2; t2 = tmp; }
             tMin = Math.max(tMin, t1);
             tMax = Math.min(tMax, t2);
@@ -460,44 +332,277 @@ public class OrientedBoundingBox implements IBoundingBox, IOrientedBB {
         }
 
         // Z slab
-        if (Math.abs(localDir.z) < EPSILON) {
-            if (localStart.z < -extent.z || localStart.z > extent.z) return false;
+        if (Math.abs(dz) < EPSILON) {
+            return !(ls.z < -extentNeg.z) && !(ls.z > extentPos.z);
         } else {
-            double ood = 1.0 / localDir.z;
-            double t1 = (-extent.z - localStart.z) * ood;
-            double t2 = (extent.z - localStart.z) * ood;
+            double ood = 1.0 / dz;
+            double t1 = (-extentNeg.z - ls.z) * ood;
+            double t2 = (extentPos.z - ls.z) * ood;
             if (t1 > t2) { double tmp = t1; t1 = t2; t2 = tmp; }
             tMin = Math.max(tMin, t1);
             tMax = Math.min(tMax, t2);
-            if (tMin > tMax) return false;
+            return !(tMin > tMax);
+        }
+    }
+
+    /** Transform a world-space point into the OBB local frame (rotation is orthonormal). */
+    private Vec3d toLocal(Vec3d world) {
+        double dx = world.x - center.x;
+        double dy = world.y - center.y;
+        double dz = world.z - center.z;
+        Vec3d r = rotation.right();
+        Vec3d u = rotation.up();
+        Vec3d f = rotation.forward();
+        return new Vec3d(
+                r.x * dx + r.y * dy + r.z * dz,
+                u.x * dx + u.y * dy + u.z * dz,
+                f.x * dx + f.y * dy + f.z * dz);
+    }
+
+    @Override
+    public boolean contains(Vec3d vec) {
+        Vec3d local = toLocal(vec);
+        return local.x >= -extentNeg.x && local.x <= extentPos.x
+                && local.y >= -extentNeg.y && local.y <= extentPos.y
+                && local.z >= -extentNeg.z && local.z <= extentPos.z;
+    }
+
+    // ------------------------------------------------------------------
+    // Cached world-space enclosing AABB
+    // ------------------------------------------------------------------
+
+    /**
+     * World-space half-extent of the enclosing AABB: for each world axis the projected
+     * half-extent is the sum of the absolute dot products of the local axes with it.
+     */
+    private Vec3d worldExtent() {
+        if (cachedWorldExtent != null) {
+            return cachedWorldExtent;
+        }
+        Box b = box();
+        Vec3d result = new Vec3d(
+                Math.abs(b.rx) * b.ex + Math.abs(b.ux) * b.ey + Math.abs(b.fx) * b.ez,
+                Math.abs(b.ry) * b.ex + Math.abs(b.uy) * b.ey + Math.abs(b.fy) * b.ez,
+                Math.abs(b.rz) * b.ex + Math.abs(b.uz) * b.ey + Math.abs(b.fz) * b.ez);
+        cachedWorldExtent = result;
+        // Enclosing AABB is centered on the geometric center (b.cx..), not the ref center.
+        cachedMin = new Vec3d(b.cx - result.x, b.cy - result.y, b.cz - result.z);
+        cachedMax = new Vec3d(b.cx + result.x, b.cy + result.y, b.cz + result.z);
+        return result;
+    }
+
+    private Box box() {
+        if (box == null) {
+            box = new Box(geometricCenter(), halfExtent(), rotation);
+        }
+        return box;
+    }
+
+    // ------------------------------------------------------------------
+    // SAT helpers
+    // ------------------------------------------------------------------
+
+    /**
+     * Test whether the two oriented boxes intersect, with {@code a} displaced by
+     * ({@code dx}, {@code dy}, {@code dz}) relative to its stored center.
+     */
+    private static boolean intersects(Box a, Box b, double dx, double dy, double dz) {
+        double tx = a.cx + dx - b.cx;
+        double ty = a.cy + dy - b.cy;
+        double tz = a.cz + dz - b.cz;
+
+        // Face axes of a.
+        if (separated(a, b, tx, ty, tz, a.rx, a.ry, a.rz)) return false;
+        if (separated(a, b, tx, ty, tz, a.ux, a.uy, a.uz)) return false;
+        if (separated(a, b, tx, ty, tz, a.fx, a.fy, a.fz)) return false;
+        // Face axes of b.
+        if (separated(a, b, tx, ty, tz, b.rx, b.ry, b.rz)) return false;
+        if (separated(a, b, tx, ty, tz, b.ux, b.uy, b.uz)) return false;
+        if (separated(a, b, tx, ty, tz, b.fx, b.fy, b.fz)) return false;
+        // Edge cross-product axes (a_i x b_j).
+        return !separatedCross(a, b, tx, ty, tz, a.rx, a.ry, a.rz, b.rx, b.ry, b.rz)
+                && !separatedCross(a, b, tx, ty, tz, a.rx, a.ry, a.rz, b.ux, b.uy, b.uz)
+                && !separatedCross(a, b, tx, ty, tz, a.rx, a.ry, a.rz, b.fx, b.fy, b.fz)
+                && !separatedCross(a, b, tx, ty, tz, a.ux, a.uy, a.uz, b.rx, b.ry, b.rz)
+                && !separatedCross(a, b, tx, ty, tz, a.ux, a.uy, a.uz, b.ux, b.uy, b.uz)
+                && !separatedCross(a, b, tx, ty, tz, a.ux, a.uy, a.uz, b.fx, b.fy, b.fz)
+                && !separatedCross(a, b, tx, ty, tz, a.fx, a.fy, a.fz, b.rx, b.ry, b.rz)
+                && !separatedCross(a, b, tx, ty, tz, a.fx, a.fy, a.fz, b.ux, b.uy, b.uz)
+                && !separatedCross(a, b, tx, ty, tz, a.fx, a.fy, a.fz, b.fx, b.fy, b.fz);
+    }
+
+    /**
+     * Single-axis OBB vs OBB separation test.
+     * {@code t} is the vector from b's center to a's (displaced) center.
+     *
+     * <p>The axis is normalized first so the {@link #EPSILON} allowance is uniform:
+     * without it, the tolerance of cross-product axes would scale with their length.</p>
+     */
+    private static boolean separated(Box a, Box b, double tx, double ty, double tz,
+                                     double lx, double ly, double lz) {
+        double lenSq = lx * lx + ly * ly + lz * lz;
+        if (Math.abs(lenSq - 1.0) > 1e-4) {
+            if (lenSq < EPSILON) {
+                return false; // Degenerate axis cannot separate.
+            }
+            double inv = 1.0 / Math.sqrt(lenSq);
+            lx *= inv;
+            ly *= inv;
+            lz *= inv;
         }
 
+        double ra = Math.abs(lx * a.rx + ly * a.ry + lz * a.rz) * a.ex
+                + Math.abs(lx * a.ux + ly * a.uy + lz * a.uz) * a.ey
+                + Math.abs(lx * a.fx + ly * a.fy + lz * a.fz) * a.ez;
+        double rb = Math.abs(lx * b.rx + ly * b.ry + lz * b.rz) * b.ex
+                + Math.abs(lx * b.ux + ly * b.uy + lz * b.uz) * b.ey
+                + Math.abs(lx * b.fx + ly * b.fy + lz * b.fz) * b.ez;
+        double d = Math.abs(tx * lx + ty * ly + tz * lz);
+        return d > ra + rb + EPSILON;
+    }
+
+    /** Compute a cross-product axis and test separation; parallel axes are ignored. */
+    private static boolean separatedCross(Box a, Box b, double tx, double ty, double tz,
+                                          double ax, double ay, double az,
+                                          double bx, double by, double bz) {
+        double lx = ay * bz - az * by;
+        double ly = az * bx - ax * bz;
+        double lz = ax * by - ay * bx;
+        if (lx * lx + ly * ly + lz * lz < EPSILON) {
+            return false; // Parallel edges: not a valid separating axis.
+        }
+        return separated(a, b, tx, ty, tz, lx, ly, lz);
+    }
+
+    /**
+     * OBB vs AABB SAT. The AABB is described by its two corners; the 15 candidate axes are
+     * the 6 face normals (3 OBB + 3 world) and the 9 cross products of OBB axes with world axes.
+     */
+    private static boolean intersectsAABB(Box a, double minX, double minY, double minZ,
+                                          double maxX, double maxY, double maxZ) {
+        // OBB face normals.
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, a.rx, a.ry, a.rz)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, a.ux, a.uy, a.uz)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, a.fx, a.fy, a.fz)) return false;
+        // World (AABB) face normals.
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, 1, 0, 0)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, 0, 1, 0)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, 0, 0, 1)) return false;
+        // Cross products: OBB axis x world axis.
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, 0, a.rz, -a.ry)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, -a.rz, 0, a.rx)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, a.ry, -a.rx, 0)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, 0, a.uz, -a.uy)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, -a.uz, 0, a.ux)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, a.uy, -a.ux, 0)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, 0, a.fz, -a.fy)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, -a.fz, 0, a.fx)) return false;
+        if (separatedAABB(a, minX, minY, minZ, maxX, maxY, maxZ, a.fy, -a.fx, 0)) return false;
         return true;
     }
 
     /**
-     * Point-in-OBB test: transform the point to OBB local space and check bounds.
+     * Single-axis OBB vs AABB separation test. The OBB projects to a radius around its center
+     * projection; the AABB projects to the interval spanned by its two corners.
+     *
+     * <p>The axis is normalized first so the {@link #EPSILON} allowance is uniform across
+     * the 6 face normals and the 9 cross-product axes.</p>
      */
-    @Override
-    public boolean contains(Vec3d vec) {
-        Matrix3 inv = rotation.copy().transpose();
-        Vec3d local = inv.apply(vec.subtract(center));
-        return local.x >= -extent.x && local.x <= extent.x
-            && local.y >= -extent.y && local.y <= extent.y
-            && local.z >= -extent.z && local.z <= extent.z;
+    private static boolean separatedAABB(Box a, double minX, double minY, double minZ,
+                                         double maxX, double maxY, double maxZ,
+                                         double lx, double ly, double lz) {
+        double lenSq = lx * lx + ly * ly + lz * lz;
+        if (Math.abs(lenSq - 1.0) > 1e-4) {
+            if (lenSq < EPSILON) {
+                return false; // Degenerate axis cannot separate.
+            }
+            double inv = 1.0 / Math.sqrt(lenSq);
+            lx *= inv;
+            ly *= inv;
+            lz *= inv;
+        }
+
+        double ra = Math.abs(lx * a.rx + ly * a.ry + lz * a.rz) * a.ex
+                + Math.abs(lx * a.ux + ly * a.uy + lz * a.uz) * a.ey
+                + Math.abs(lx * a.fx + ly * a.fy + lz * a.fz) * a.ez;
+        double oc = lx * a.cx + ly * a.cy + lz * a.cz;
+        double p1 = lx * minX + ly * minY + lz * minZ;
+        double p2 = lx * maxX + ly * maxY + lz * maxZ;
+        double aMin = Math.min(p1, p2);
+        double aMax = Math.max(p1, p2);
+        return aMin > oc + ra + EPSILON || oc - ra > aMax + EPSILON;
     }
 
-    @Override
-    public Vec3d extent() {
-        return extent;
+    // ------------------------------------------------------------------
+    // Geometry snapshot
+    // ------------------------------------------------------------------
+
+    /**
+     * Allocation-friendly flattened snapshot of an oriented box's geometry.
+     * Basis vectors are the columns of the rotation matrix (right/up/forward).
+     */
+    private static final class Box {
+        final double cx, cy, cz;   // center
+        final double ex, ey, ez;   // half-extents
+        final double rx, ry, rz;   // right
+        final double ux, uy, uz;   // up
+        final double fx, fy, fz;   // forward
+
+        Box(Vec3d center, Vec3d extent, Matrix3 rot) {
+            this.cx = center.x;
+            this.cy = center.y;
+            this.cz = center.z;
+            this.ex = extent.x;
+            this.ey = extent.y;
+            this.ez = extent.z;
+            Vec3d r = rot.right();
+            this.rx = r.x;
+            this.ry = r.y;
+            this.rz = r.z;
+            Vec3d u = rot.up();
+            this.ux = u.x;
+            this.uy = u.y;
+            this.uz = u.z;
+            Vec3d f = rot.forward();
+            this.fx = f.x;
+            this.fy = f.y;
+            this.fz = f.z;
+        }
+
+        /** Build a box from an AABB (identity orientation). */
+        Box(double cx, double cy, double cz, double ex, double ey, double ez) {
+            this.cx = cx;
+            this.cy = cy;
+            this.cz = cz;
+            this.ex = ex;
+            this.ey = ey;
+            this.ez = ez;
+            this.rx = 1;
+            this.ry = 0;
+            this.rz = 0;
+            this.ux = 0;
+            this.uy = 1;
+            this.uz = 0;
+            this.fx = 0;
+            this.fy = 0;
+            this.fz = 1;
+        }
     }
 
-    @Override
-    public Matrix3 rotation() {
-        return rotation;
-    }
-
-    public OrientedBoundingBox copy() {
-        return new OrientedBoundingBox(center, extent, rotation);
+    /** Convert any box to the flattened representation (geometric center + half-extent). */
+    private static Box of(IBoundingBox bb) {
+        if (bb instanceof IOrientedBB) {
+            IOrientedBB o = (IOrientedBB) bb;
+            Vec3d en = o.extentNeg();
+            Vec3d ep = o.extentPos();
+            Vec3d half = new Vec3d((en.x + ep.x) * 0.5, (en.y + ep.y) * 0.5, (en.z + ep.z) * 0.5);
+            Vec3d offset = new Vec3d((ep.x - en.x) * 0.5, (ep.y - en.y) * 0.5, (ep.z - en.z) * 0.5);
+            Vec3d geometric = o.center().add(o.rotation().apply(offset));
+            return new Box(geometric, half, o.rotation());
+        }
+        Vec3d min = bb.min();
+        Vec3d max = bb.max();
+        return new Box((min.x + max.x) * 0.5, (min.y + max.y) * 0.5, (min.z + max.z) * 0.5,
+                (max.x - min.x) * 0.5, (max.y - min.y) * 0.5, (max.z - min.z) * 0.5);
     }
 }

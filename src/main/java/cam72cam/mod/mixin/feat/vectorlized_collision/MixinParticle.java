@@ -21,12 +21,6 @@ public abstract class MixinParticle {
     @Shadow
     public abstract AxisAlignedBB getBoundingBox();
 
-    @Shadow
-    public abstract void setBoundingBox(AxisAlignedBB bb);
-
-    @Shadow
-    private AxisAlignedBB boundingBox;
-
     @Inject(method = "move", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/World;getCollisionBoxes(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;)Ljava/util/List;"))
     public void handleVectorMovement(double x, double y, double z, CallbackInfo ci, @Local List<AxisAlignedBB> list,
                                      @Local(argsOnly = true, ordinal = 0) LocalDoubleRef x1,

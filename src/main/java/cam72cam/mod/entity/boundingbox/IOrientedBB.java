@@ -9,10 +9,18 @@ import cam72cam.mod.math.Vec3d;
  * everything else is treated as an AABB.
  */
 public interface IOrientedBB {
+    /**
+     * Reference point of the box in world space. This is NOT necessarily the geometric
+     * center: the box extends asymmetrically around it (like an entity whose reference
+     * position is at its feet).
+     */
     Vec3d center();
 
-    /** Half-extent in local space (x, y, z) */
-    Vec3d extent();
+    /** Distance from {@link #center()} to the negative face along each local axis. */
+    Vec3d extentNeg();
+
+    /** Distance from {@link #center()} to the positive face along each local axis. */
+    Vec3d extentPos();
 
     /** Rotation matrix (columns = right, up, forward) */
     Matrix3 rotation();
