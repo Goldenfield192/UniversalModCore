@@ -8,6 +8,7 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.model.ModelRenderer;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
@@ -38,6 +39,7 @@ public class ClientEvents {
 
         VBO.registerClientEvents();
         CustomTexture.registerClientEvents();
+        ModelRenderer.registerClientEvents();
 
         // Forge does not fire world unloaded client side
         TICK.subscribe(() -> {
