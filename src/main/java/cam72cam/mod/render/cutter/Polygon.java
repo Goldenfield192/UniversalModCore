@@ -50,20 +50,16 @@ public final class Polygon {
             double b0 = d.dotProduct(e1);
             double b1 = d.dotProduct(e2);
 
-            double x = (b0 * a11 - b1 * a01) / det;
-            double y = (b1 * a00 - b0 * a01) / det;
+            float x = (float) ((b0 * a11 - b1 * a01) / det);
+            float y = (float) ((b1 * a00 - b0 * a01) / det);
 
-            vertex.u = (float) (
-                    template.sourceU[0]
-                            + x * (template.sourceU[1] - template.sourceU[0])
-                            + y * (template.sourceU[3] - template.sourceU[0])
-            );
+            vertex.u = template.sourceU[0]
+                       + x * (template.sourceU[1] - template.sourceU[0])
+                       + y * (template.sourceU[3] - template.sourceU[0]);
 
-            vertex.v = (float) (
-                    template.sourceV[0]
-                            + x * (template.sourceV[1] - template.sourceV[0])
-                            + y * (template.sourceV[3] - template.sourceV[0])
-            );
+            vertex.v = template.sourceV[0]
+                       + x * (template.sourceV[1] - template.sourceV[0])
+                       + y * (template.sourceV[3] - template.sourceV[0]);
         }
 
         Collections.reverse(vertices);

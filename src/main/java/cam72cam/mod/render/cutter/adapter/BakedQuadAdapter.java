@@ -1,5 +1,6 @@
 package cam72cam.mod.render.cutter.adapter;
 
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.cutter.*;
 import cam72cam.mod.util.BlockDirectionUtil;
@@ -11,10 +12,9 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplate> {
+public class BakedQuadAdapter {
     private static final int STRIDE = DefaultVertexFormats.BLOCK.getIntegerSize();
 
-    @Override
     public QuadTemplate createTemplate(List<BakedQuad> quads, Plane plane) {
         if (quads.isEmpty()) {
             return null;
@@ -72,7 +72,6 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         return quads.isEmpty() ? null : quads.get(0);
     }
 
-    @Override
     public Polygon toPolygon(BakedQuad quad) {
         List<ClipVertex> verts = new ArrayList<>(4);
 
@@ -86,7 +85,6 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         return new Polygon(verts, normal);
     }
 
-    @Override
     public List<BakedQuad> fromPrimitive(Polygon polygon, BakedQuad primitive) {
         List<BakedQuad> result = new ArrayList<>();
         if (polygon.getVertices().size() < 3) {
@@ -114,7 +112,6 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         return result;
     }
 
-    @Override
     public List<BakedQuad> fromTemplate(Polygon polygon, QuadTemplate template) {
         List<BakedQuad> result = new ArrayList<>();
         if (polygon.getVertices().size() < 3) {
@@ -159,7 +156,6 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         data[base + 5] = Float.floatToRawIntBits(v.v);
     }
 
-    @Override
     public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
         Polygon.generate(polygon, template);
     }

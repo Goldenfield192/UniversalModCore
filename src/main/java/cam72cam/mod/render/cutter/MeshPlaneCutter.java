@@ -1,7 +1,11 @@
 package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.cutter.adapter.BakedQuadAdapter;
+import cam72cam.mod.render.cutter.adapter.QuadTemplate;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -12,35 +16,24 @@ import java.util.*;
  */
 public final class MeshPlaneCutter {
 
-    private static final double EPS = 1e-4;
-
     private MeshPlaneCutter() {}
 
     /**
      * Main cutting entry.
      * Returns fragments and caps.
      */
-    public static <T, Template> List<T> cut(
-            List<T> primitives,
-            Plane plane,
-            PrimitiveAdapter<T, Template> adapter) {
-
-        List<T> result = new ArrayList<>();
+    public static List<BakedQuad> cut(List<BakedQuad> primitives, Plane plane, BakedQuadAdapter adapter) {
+        List<BakedQuad> result = new ArrayList<>();
         List<Pair<ClipVertex, ClipVertex>> allPairs = new ArrayList<>();
 
-        for (T primitive : primitives) {
+        for (BakedQuad primitive : primitives) {
             Polygon polygon = adapter.toPolygon(primitive);
             ClipResult clipped = PolygonClipper.clip(polygon, plane);
 
             allPairs.addAll(clipped.getIntersections());
 
             if (clipped.getPolygon().getVertices().size() >= 3) {
-                result.addAll(
-                        adapter.fromPrimitive(
-                                clipped.getPolygon(),
-                                primitive
-                        )
-                );
+                result.addAll(adapter.fromPrimitive(clipped.getPolygon(), primitive));
             }
         }
 
@@ -52,7 +45,7 @@ public final class MeshPlaneCutter {
             }
         }
 
-        Template template = adapter.createTemplate(primitives, plane);
+        QuadTemplate template = adapter.createTemplate(primitives, plane);
         if (template == null) return result;
 
         for (List<ClipVertex> ring : rings) {
@@ -99,7 +92,7 @@ public final class MeshPlaneCutter {
         Map<Vec3d, ClipVertex> coordMap = new HashMap<>();
         java.util.function.Function<ClipVertex, ClipVertex> getMerged = (v) -> {
             for (Vec3d key : coordMap.keySet()) {
-                if (key.distanceTo(v.pos) < EPS) {
+                if (key.distanceTo(v.pos) < 1e-4) {
                     return coordMap.get(key);
                 }
             }

@@ -1,5 +1,6 @@
 package cam72cam.mod.render.cutter;
 
+import cam72cam.mod.math.Plane;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;

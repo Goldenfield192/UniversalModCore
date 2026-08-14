@@ -27,19 +27,10 @@ public class QuadTemplate {
     public final float[] sourceU;
     public final float[] sourceV;
 
-    public QuadTemplate(
-            TextureAtlasSprite sprite,
-            Facing facing,
-            int tintIndex,
-            boolean shade,
-            boolean ambientOcclusion,
-            VertexFormat format,
-            BakedQuad source,
-            List<BakedQuad> candidates,
-            Vec3d[] sourcePos,
-            float[] sourceU,
-            float[] sourceV) {
-
+    public QuadTemplate(TextureAtlasSprite sprite, Facing facing, int tintIndex,
+                        boolean shade, boolean ambientOcclusion,
+                        VertexFormat format, BakedQuad source, List<BakedQuad> candidates,
+                        Vec3d[] sourcePos, float[] sourceU, float[] sourceV) {
         this.sprite = sprite;
         this.facing = facing;
         this.sourceFace = Facing.from(source.getFace());

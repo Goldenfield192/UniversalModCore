@@ -1,6 +1,4 @@
-package cam72cam.mod.render.cutter;
-
-import cam72cam.mod.math.Vec3d;
+package cam72cam.mod.math;
 
 public class Plane {
 

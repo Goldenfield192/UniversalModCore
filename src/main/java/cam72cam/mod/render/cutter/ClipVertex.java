@@ -16,16 +16,7 @@ public class ClipVertex {
     public byte ny;
     public byte nz;
 
-    public ClipVertex(
-            Vec3d pos,
-            float u,
-            float v,
-            int color,
-            int light,
-            byte nx,
-            byte ny,
-            byte nz) {
-
+    public ClipVertex(Vec3d pos, float u, float v, int color, int light, byte nx, byte ny, byte nz) {
         this.pos = pos;
 
         this.u = u;
@@ -40,16 +31,7 @@ public class ClipVertex {
     }
 
     public ClipVertex copy() {
-        return new ClipVertex(
-                pos,
-                u,
-                v,
-                color,
-                light,
-                nx,
-                ny,
-                nz
-        );
+        return new ClipVertex(pos, u, v, color, light, nx, ny, nz);
     }
 
     public ClipVertex lerp(ClipVertex other, double t) {
@@ -67,20 +49,10 @@ public class ClipVertex {
         byte nny = (byte) Math.round(ny + (other.ny - ny) * t);
         byte nnz = (byte) Math.round(nz + (other.nz - nz) * t);
 
-        return new ClipVertex(
-                p,
-                nu,
-                nv,
-                c,
-                l,
-                nnx,
-                nny,
-                nnz
-        );
+        return new ClipVertex(p, nu, nv, c, l, nnx, nny, nnz);
     }
 
     private static int lerpColor(int a, int b, double t) {
-
         int aa = (a >>> 24) & 255;
         int ar = (a >>> 16) & 255;
         int ag = (a >>> 8) & 255;
@@ -96,10 +68,7 @@ public class ClipVertex {
         int cg = (int)Math.round(ag + (bg - ag) * t);
         int cb = (int)Math.round(ab + (bb - ab) * t);
 
-        return (ca << 24)
-                | (cr << 16)
-                | (cg << 8)
-                | cb;
+        return (ca << 24) | (cr << 16) | (cg << 8) | cb;
     }
 
     /**
@@ -122,59 +91,22 @@ public class ClipVertex {
     }
 
     public ClipVertex(Vec3d pos) {
-        this(
-                pos,
-                0,
-                0,
-                -1,
-                0,
-                (byte)0,
-                (byte)0,
-                (byte)0
-        );
+        this(pos, 0, 0, -1, 0, (byte)0, (byte)0, (byte)0);
     }
 
     public ClipVertex(Vec3d pos, float u, float v) {
-        this(
-                pos,
-                u,
-                v,
-                -1,
-                0,
-                (byte)0,
-                (byte)0,
-                (byte)0
-        );
+        this(pos, u, v, -1, 0, (byte)0, (byte)0, (byte)0);
     }
 
-    public ClipVertex(
-            Vec3d pos,
-            float u,
-            float v,
-            int color,
-            int light) {
-
-        this(
-                pos,
-                u,
-                v,
-                color,
-                light,
-                (byte)0,
-                (byte)0,
-                (byte)0
-        );
+    public ClipVertex(Vec3d pos, float u, float v, int color, int light) {
+        this(pos, u, v, color, light, (byte)0, (byte)0, (byte)0);
     }
 
     public static ClipVertex of(Vec3d pos) {
         return new ClipVertex(pos);
     }
 
-    public static ClipVertex of(
-            Vec3d pos,
-            float u,
-            float v) {
-
+    public static ClipVertex of(Vec3d pos, float u, float v) {
         return new ClipVertex(pos, u, v);
     }
 }
