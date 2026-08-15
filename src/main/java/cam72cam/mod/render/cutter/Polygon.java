@@ -12,10 +12,6 @@ public final class Polygon {
     private final List<ClipVertex> vertices;
     private final Vec3d normal; // Could be null
 
-    public Polygon(Collection<ClipVertex> vertices) {
-        this(vertices, null);
-    }
-
     public Polygon(Collection<ClipVertex> vertices, Vec3d normal) {
         this.vertices = Collections.unmodifiableList(new ArrayList<>(vertices));
         this.normal = normal;

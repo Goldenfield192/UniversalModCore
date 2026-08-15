@@ -2,7 +2,8 @@ package cam72cam.mod.render.cutter.adapter;
 
 import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.cutter.*;
+import cam72cam.mod.render.cutter.ClipVertex;
+import cam72cam.mod.render.cutter.Polygon;
 import cam72cam.mod.util.BlockDirectionUtil;
 import cam72cam.mod.util.Facing;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -91,9 +92,8 @@ public class BakedQuadAdapter {
             return result;
         }
 
-        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
+        for (List<ClipVertex> quadVerts : toQuads(polygon.getVertices())) {
             int[] data = primitive.getVertexData().clone();
-            List<ClipVertex> quadVerts = quad.getVertices();
 
             writeVertex(data, 0, quadVerts.get(0));
             writeVertex(data, 1, quadVerts.get(1));
@@ -118,18 +118,18 @@ public class BakedQuadAdapter {
             return result;
         }
 
-        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
+        for (List<ClipVertex> quadVerts : toQuads(polygon.getVertices())) {
             int[] data = template.source.getVertexData().clone();
 
-            writePosition(data, 0, quad.getVertices().get(3), template.format);
-            writePosition(data, 1, quad.getVertices().get(2), template.format);
-            writePosition(data, 2, quad.getVertices().get(1), template.format);
-            writePosition(data, 3, quad.getVertices().get(0), template.format);
+            writePosition(data, 0, quadVerts.get(3), template.format);
+            writePosition(data, 1, quadVerts.get(2), template.format);
+            writePosition(data, 2, quadVerts.get(1), template.format);
+            writePosition(data, 3, quadVerts.get(0), template.format);
 
-            writeUV(data, 0, quad.getVertices().get(3), template.format);
-            writeUV(data, 1, quad.getVertices().get(2), template.format);
-            writeUV(data, 2, quad.getVertices().get(1), template.format);
-            writeUV(data, 3, quad.getVertices().get(0), template.format);
+            writeUV(data, 0, quadVerts.get(3), template.format);
+            writeUV(data, 1, quadVerts.get(2), template.format);
+            writeUV(data, 2, quadVerts.get(1), template.format);
+            writeUV(data, 3, quadVerts.get(0), template.format);
 
             result.add(new BakedQuad(
                     data,
@@ -158,6 +158,20 @@ public class BakedQuadAdapter {
 
     public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
         Polygon.generate(polygon, template);
+    }
+
+    /** Fans a convex polygon into quads. */
+    private static List<List<ClipVertex>> toQuads(List<ClipVertex> polygon) {
+        List<List<ClipVertex>> quads = new ArrayList<>();
+        for (int i = 1; i + 1 < polygon.size(); i += 2) {
+            List<ClipVertex> quad = new ArrayList<>(4);
+            quad.add(polygon.get(0));
+            quad.add(polygon.get(i));
+            quad.add(polygon.get(i + 1));
+            quad.add(i + 2 < polygon.size() ? polygon.get(i + 2) : polygon.get(i + 1));
+            quads.add(quad);
+        }
+        return quads;
     }
 
     private static ClipVertex readVertex(int[] data, int index) {
