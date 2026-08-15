@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class PolygonQuadBuilder {
-
-    private PolygonQuadBuilder() {}
-
     public static List<Polygon> build(Polygon polygon) {
         List<Polygon> result = new ArrayList<>();
         List<ClipVertex> verts = new ArrayList<>(polygon.getVertices());

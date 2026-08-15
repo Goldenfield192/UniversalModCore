@@ -15,9 +15,6 @@ import java.util.*;
  * Handles convex/concave polygons, multiple disjoint rings, and rings sharing edges/vertices.
  */
 public final class MeshPlaneCutter {
-
-    private MeshPlaneCutter() {}
-
     /**
      * Main cutting entry.
      * Returns fragments and caps.
@@ -320,12 +317,39 @@ public final class MeshPlaneCutter {
                 ClipVertex b = verts.get(i);
                 ClipVertex c = verts.get(next);
 
-                if (isConvexEar(a, b, c, normal) && !hasVerticesInside(a, b, c, verts, normal)) {
-                    List<ClipVertex> tri = new ArrayList<>(Arrays.asList(a, b, c));
-                    triangles.add(tri);
-                    verts.remove(i);
-                    found = true;
-                    break;
+                //Check if is ear vert
+                Vec3d ab = b.pos.subtract(a.pos);
+                Vec3d bc = c.pos.subtract(b.pos);
+                double cross = ab.crossProduct(bc).dotProduct(normal);
+                if (cross > 0) {
+                    boolean result = false;
+                    Vec3d u = normal.crossProduct(new Vec3d(1, 0, 0));
+                    if (u.length() < 1e-8) u = normal.crossProduct(new Vec3d(0, 1, 0));
+                    u = u.normalize();
+                    Vec3d v = normal.crossProduct(u).normalize();
+
+                    double ax = a.pos.dotProduct(u), ay = a.pos.dotProduct(v);
+                    double bx = b.pos.dotProduct(u), by = b.pos.dotProduct(v);
+                    double cx = c.pos.dotProduct(u), cy = c.pos.dotProduct(v);
+
+                    for (ClipVertex p : verts) {
+                        if (p == a || p == b || p == c) continue;
+                        double px = p.pos.dotProduct(u), py = p.pos.dotProduct(v);
+                        double d1 = (px - bx) * (ay - by) - (ax - bx) * (py - by);
+                        double d2 = (px - cx) * (by - cy) - (bx - cx) * (py - cy);
+                        double d3 = (px - ax) * (cy - ay) - (cx - ax) * (py - ay);
+                        if (((d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0))) {
+                            result = true;
+                            break;
+                        }
+                    }
+                    if (!result) {
+                        List<ClipVertex> tri = new ArrayList<>(Arrays.asList(a, b, c));
+                        triangles.add(tri);
+                        verts.remove(i);
+                        found = true;
+                        break;
+                    }
                 }
             }
             if (!found) {
@@ -348,49 +372,4 @@ public final class MeshPlaneCutter {
         return triangles;
     }
 
-    private static boolean isConvexEar(ClipVertex a, ClipVertex b, ClipVertex c, Vec3d normal) {
-        Vec3d ab = b.pos.subtract(a.pos);
-        Vec3d bc = c.pos.subtract(b.pos);
-        double cross = ab.crossProduct(bc).dotProduct(normal);
-        return cross > 0;
-    }
-
-    private static boolean hasVerticesInside(ClipVertex a, ClipVertex b, ClipVertex c,
-                                             List<ClipVertex> verts, Vec3d normal) {
-        Vec3d u = normal.crossProduct(new Vec3d(1, 0, 0));
-        if (u.length() < 1e-8) u = normal.crossProduct(new Vec3d(0, 1, 0));
-        u = u.normalize();
-        Vec3d v = normal.crossProduct(u).normalize();
-
-        double ax = a.pos.dotProduct(u), ay = a.pos.dotProduct(v);
-        double bx = b.pos.dotProduct(u), by = b.pos.dotProduct(v);
-        double cx = c.pos.dotProduct(u), cy = c.pos.dotProduct(v);
-
-        for (ClipVertex p : verts) {
-            if (p == a || p == b || p == c) continue;
-            double px = p.pos.dotProduct(u), py = p.pos.dotProduct(v);
-            if (pointInTriangle2D(px, py, ax, ay, bx, by, cx, cy)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean pointInTriangle2D(double px, double py,
-                                             double ax, double ay,
-                                             double bx, double by,
-                                             double cx, double cy) {
-        double d1 = sign2D(px, py, ax, ay, bx, by);
-        double d2 = sign2D(px, py, bx, by, cx, cy);
-        double d3 = sign2D(px, py, cx, cy, ax, ay);
-        boolean hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        boolean hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
-    }
-
-    private static double sign2D(double p1x, double p1y,
-                                 double p2x, double p2y,
-                                 double p3x, double p3y) {
-        return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
-    }
 }

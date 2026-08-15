@@ -9,8 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class BlockCutHelper {
-
-    private static final double EPS = 1e-8;
+    private static final double EPS = 1e-6;
 
     private static final Map<Plane, List<Vec3d>> INTERSECTION_CACHE = new IdentityHashMap<>();
     private static final Map<Plane, List<Vec3d>> CLIPPED_CACHE = new IdentityHashMap<>();
@@ -33,8 +32,6 @@ public final class BlockCutHelper {
             {4, 5}, {4, 6},
             {3, 7}, {5, 7}, {6, 7}
     };
-
-    private BlockCutHelper() {}
 
     public static float getCutCenterHeight(Plane plane) {
         List<Vec3d> intersections = getCachedIntersections(plane);

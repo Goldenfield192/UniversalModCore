@@ -7,11 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class PolygonClipper {
-
     private static final double EPS = 1E-6;
-
-    private PolygonClipper() {}
-
     /**
      * Keep the positive side of the plane.
      * Returns ClipResult containing clipped polygon and list of (exit, entry) intersection pairs.
