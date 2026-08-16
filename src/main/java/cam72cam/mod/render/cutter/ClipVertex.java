@@ -30,10 +30,6 @@ public class ClipVertex {
         this.nz = nz;
     }
 
-    public ClipVertex copy() {
-        return new ClipVertex(pos, u, v, color, light, nx, ny, nz);
-    }
-
     public ClipVertex lerp(ClipVertex other, double t) {
 
         Vec3d p = pos.add(other.pos.subtract(pos).scale(t));
@@ -71,13 +67,7 @@ public class ClipVertex {
         return (ca << 24) | (cr << 16) | (cg << 8) | cb;
     }
 
-    /**
-     * UV2(lightmap)format:
-     * low16 = block light
-     * high16 = sky light
-     */
     private static int lerpLight(int a, int b, double t) {
-
         int ablock = a & 0xffff;
         int asky = (a >>> 16) & 0xffff;
 
@@ -90,23 +80,7 @@ public class ClipVertex {
         return (sky << 16) | block;
     }
 
-    public ClipVertex(Vec3d pos) {
-        this(pos, 0, 0, -1, 0, (byte)0, (byte)0, (byte)0);
-    }
-
-    public ClipVertex(Vec3d pos, float u, float v) {
-        this(pos, u, v, -1, 0, (byte)0, (byte)0, (byte)0);
-    }
-
     public ClipVertex(Vec3d pos, float u, float v, int color, int light) {
         this(pos, u, v, color, light, (byte)0, (byte)0, (byte)0);
-    }
-
-    public static ClipVertex of(Vec3d pos) {
-        return new ClipVertex(pos);
-    }
-
-    public static ClipVertex of(Vec3d pos, float u, float v) {
-        return new ClipVertex(pos, u, v);
     }
 }
