@@ -16,6 +16,10 @@ public class ClipVertex {
     public byte ny;
     public byte nz;
 
+    public ClipVertex(Vec3d pos, float u, float v, int color, int light) {
+        this(pos, u, v, color, light, (byte)0, (byte)0, (byte)0);
+    }
+
     public ClipVertex(Vec3d pos, float u, float v, int color, int light, byte nx, byte ny, byte nz) {
         this.pos = pos;
 
@@ -31,7 +35,6 @@ public class ClipVertex {
     }
 
     public ClipVertex lerp(ClipVertex other, double t) {
-
         Vec3d p = pos.add(other.pos.subtract(pos).scale(t));
 
         float nu = (float) (u + (other.u - u) * t);
@@ -78,9 +81,5 @@ public class ClipVertex {
         int sky = (int)Math.round(asky + (bsky - asky) * t);
 
         return (sky << 16) | block;
-    }
-
-    public ClipVertex(Vec3d pos, float u, float v, int color, int light) {
-        this(pos, u, v, color, light, (byte)0, (byte)0, (byte)0);
     }
 }

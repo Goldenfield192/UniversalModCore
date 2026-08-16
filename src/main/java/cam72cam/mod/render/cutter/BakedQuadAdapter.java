@@ -154,24 +154,6 @@ public class BakedQuadAdapter {
         data[base + 5] = Float.floatToRawIntBits(v.v);
     }
 
-    public void prepareCap(Polygon polygon, QuadTemplate template) {
-        polygon.generateUV(template);
-    }
-
-    /** Fans a convex polygon into quads. */
-    private static List<List<ClipVertex>> toQuads(List<ClipVertex> polygon) {
-        List<List<ClipVertex>> quads = new ArrayList<>();
-        for (int i = 1; i + 1 < polygon.size(); i += 2) {
-            List<ClipVertex> quad = new ArrayList<>(4);
-            quad.add(polygon.get(0));
-            quad.add(polygon.get(i));
-            quad.add(polygon.get(i + 1));
-            quad.add(i + 2 < polygon.size() ? polygon.get(i + 2) : polygon.get(i + 1));
-            quads.add(quad);
-        }
-        return quads;
-    }
-
     private static ClipVertex readVertex(int[] data, int index) {
         int base = index * STRIDE;
 

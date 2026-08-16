@@ -53,7 +53,7 @@ public final class MeshPlaneCutter {
 
             if (isConvex) {
                 Polygon capPoly = new Polygon(ring, plane.normal);
-                adapter.prepareCap(capPoly, template);
+                capPoly.generateUV(template);
                 result.addAll(adapter.fromTemplate(capPoly, template));
             } else {
                 List<List<ClipVertex>> triangles = earClip(ring, plane.normal);
@@ -64,7 +64,7 @@ public final class MeshPlaneCutter {
                     quadVerts.add(tri.get(2));
                     quadVerts.add(tri.get(2));
                     Polygon capPoly = new Polygon(quadVerts, plane.normal);
-                    adapter.prepareCap(capPoly, template);
+                    capPoly.generateUV(template);
                     result.addAll(adapter.fromTemplate(capPoly, template));
                 }
             }
