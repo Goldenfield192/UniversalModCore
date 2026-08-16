@@ -92,13 +92,13 @@ public class BakedQuadAdapter {
             return result;
         }
 
-        for (List<ClipVertex> quadVerts : toQuads(polygon.getVertices())) {
+        for (Polygon quad : Polygon.convexToQuads(polygon)) {
             int[] data = primitive.getVertexData().clone();
 
-            writeVertex(data, 0, quadVerts.get(0));
-            writeVertex(data, 1, quadVerts.get(1));
-            writeVertex(data, 2, quadVerts.get(2));
-            writeVertex(data, 3, quadVerts.get(3));
+            writeVertex(data, 0, quad.getVertices().get(0));
+            writeVertex(data, 1, quad.getVertices().get(1));
+            writeVertex(data, 2, quad.getVertices().get(2));
+            writeVertex(data, 3, quad.getVertices().get(3));
 
             result.add(new BakedQuad(
                     data,
@@ -118,18 +118,18 @@ public class BakedQuadAdapter {
             return result;
         }
 
-        for (List<ClipVertex> quadVerts : toQuads(polygon.getVertices())) {
+        for (Polygon quad : Polygon.convexToQuads(polygon)) {
             int[] data = template.source.getVertexData().clone();
 
-            writePosition(data, 0, quadVerts.get(3), template.format);
-            writePosition(data, 1, quadVerts.get(2), template.format);
-            writePosition(data, 2, quadVerts.get(1), template.format);
-            writePosition(data, 3, quadVerts.get(0), template.format);
+            writePosition(data, 0, quad.getVertices().get(3), template.format);
+            writePosition(data, 1, quad.getVertices().get(2), template.format);
+            writePosition(data, 2, quad.getVertices().get(1), template.format);
+            writePosition(data, 3, quad.getVertices().get(0), template.format);
 
-            writeUV(data, 0, quadVerts.get(3), template.format);
-            writeUV(data, 1, quadVerts.get(2), template.format);
-            writeUV(data, 2, quadVerts.get(1), template.format);
-            writeUV(data, 3, quadVerts.get(0), template.format);
+            writeUV(data, 0, quad.getVertices().get(3), template.format);
+            writeUV(data, 1, quad.getVertices().get(2), template.format);
+            writeUV(data, 2, quad.getVertices().get(1), template.format);
+            writeUV(data, 3, quad.getVertices().get(0), template.format);
 
             result.add(new BakedQuad(
                     data,
@@ -157,7 +157,7 @@ public class BakedQuadAdapter {
     }
 
     public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
-        Polygon.generate(polygon, template);
+        Polygon.generateUV(polygon, template);
     }
 
     /** Fans a convex polygon into quads. */
