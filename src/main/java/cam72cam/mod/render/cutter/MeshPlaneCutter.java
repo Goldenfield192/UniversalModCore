@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 
 /*
- * Cuts primitives with a plane and generates caps for the cross‑section.
+ * Cuts vanilla models with a plane and generates caps for the cross‑section.
  * Handles convex/concave polygons, multiple disjoint rings, and rings sharing edges/vertices.
  */
 public final class MeshPlaneCutter {
@@ -22,8 +22,7 @@ public final class MeshPlaneCutter {
         List<Pair<ClipVertex, ClipVertex>> allPairs = new ArrayList<>();
 
         for (BakedQuad quad : quads) {
-            Polygon polygon = adapter.toPolygon(quad);
-            ClipResult clipped = Polygon.clip(polygon, plane);
+            ClipResult clipped = adapter.toPolygon(quad).clip(plane);
 
             allPairs.addAll(clipped.intersections);
 
@@ -54,7 +53,7 @@ public final class MeshPlaneCutter {
 
             if (isConvex) {
                 Polygon capPoly = new Polygon(ring, plane.normal);
-                adapter.prepareCap(capPoly, plane, template);
+                adapter.prepareCap(capPoly, template);
                 result.addAll(adapter.fromTemplate(capPoly, template));
             } else {
                 List<List<ClipVertex>> triangles = earClip(ring, plane.normal);
@@ -65,7 +64,7 @@ public final class MeshPlaneCutter {
                     quadVerts.add(tri.get(2));
                     quadVerts.add(tri.get(2));
                     Polygon capPoly = new Polygon(quadVerts, plane.normal);
-                    adapter.prepareCap(capPoly, plane, template);
+                    adapter.prepareCap(capPoly, template);
                     result.addAll(adapter.fromTemplate(capPoly, template));
                 }
             }

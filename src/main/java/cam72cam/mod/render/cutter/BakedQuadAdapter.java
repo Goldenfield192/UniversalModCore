@@ -74,7 +74,7 @@ public class BakedQuadAdapter {
             return result;
         }
 
-        for (Polygon quad : Polygon.convexToQuads(polygon)) {
+        for (Polygon quad : polygon.convexToQuads()) {
             int[] data = primitive.getVertexData().clone();
 
             writeVertex(data, 0, quad.getVertices().get(0));
@@ -100,7 +100,7 @@ public class BakedQuadAdapter {
             return result;
         }
 
-        for (Polygon quad : Polygon.convexToQuads(polygon)) {
+        for (Polygon quad : polygon.convexToQuads()) {
             int[] data = template.source.getVertexData().clone();
 
             writePosition(data, 0, quad.getVertices().get(3), template.format);
@@ -154,8 +154,8 @@ public class BakedQuadAdapter {
         data[base + 5] = Float.floatToRawIntBits(v.v);
     }
 
-    public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
-        Polygon.generateUV(polygon, template);
+    public void prepareCap(Polygon polygon, QuadTemplate template) {
+        polygon.generateUV(template);
     }
 
     /** Fans a convex polygon into quads. */
