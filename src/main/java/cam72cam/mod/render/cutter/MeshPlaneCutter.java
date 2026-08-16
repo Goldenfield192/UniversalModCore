@@ -27,10 +27,10 @@ public final class MeshPlaneCutter {
             Polygon polygon = adapter.toPolygon(primitive);
             ClipResult clipped = PolygonClipper.clip(polygon, plane);
 
-            allPairs.addAll(clipped.getIntersections());
+            allPairs.addAll(clipped.intersections);
 
-            if (clipped.getPolygon().getVertices().size() >= 3) {
-                result.addAll(adapter.fromPrimitive(clipped.getPolygon(), primitive));
+            if (clipped.polygon.getVertices().size() >= 3) {
+                result.addAll(adapter.fromPrimitive(clipped.polygon, primitive));
             }
         }
 

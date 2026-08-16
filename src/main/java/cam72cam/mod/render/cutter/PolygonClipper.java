@@ -44,13 +44,13 @@ public final class PolygonClipper {
 
             } else if (currentInside) {
                 // inside → outside : exit point
-                ClipVertex inter = intersection(current, next, dc, dn);
+                ClipVertex inter = current.lerp(next, dc / (dc - dn));
                 clippedVerts.add(inter);
                 lastExit = inter;
 
             } else if (nextInside) {
                 // outside → inside : entry point
-                ClipVertex inter = intersection(current, next, dc, dn);
+                ClipVertex inter = current.lerp(next, dc / (dc - dn));
                 clippedVerts.add(inter);
 
                 // Pair with last exit if exists
@@ -75,15 +75,5 @@ public final class PolygonClipper {
 
         Polygon clippedPolygon = new Polygon(clippedVerts, polygon.getNormal());
         return new ClipResult(clippedPolygon, intersectionPairs);
-    }
-
-    private static ClipVertex intersection(
-            ClipVertex a,
-            ClipVertex b,
-            double da,
-            double db) {
-
-        double t = da / (da - db);
-        return a.lerp(b, t);
     }
 }

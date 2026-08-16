@@ -35,7 +35,7 @@ public final class Polygon {
         double det = a00 * a11 - a01 * a01;
 
         if (Math.abs(det) < 1E-8) {
-            return polygon.copy();
+            return new Polygon(polygon.getVertices(), polygon.getNormal());
         }
 
         List<ClipVertex> vertices = new ArrayList<>(polygon.getVertices());
@@ -68,9 +68,5 @@ public final class Polygon {
 
     public Vec3d getNormal() {
         return normal;
-    }
-
-    public Polygon copy() {
-        return new Polygon(vertices, normal);
     }
 }
