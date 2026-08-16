@@ -55,22 +55,6 @@ public class BakedQuadAdapter {
         );
     }
 
-    private static BakedQuad findBestQuad(List<BakedQuad> quads, Plane plane) {
-        Facing target = BlockDirectionUtil.fromNormal(plane.normal.scale(-1));
-        if (target == null) {
-            return null;
-        }
-
-        for (BakedQuad quad : quads) {
-            Facing face = Facing.from(quad.getFace());
-            if (face == target) {
-                return quad;
-            }
-        }
-
-        return quads.isEmpty() ? null : quads.get(0);
-    }
-
     public Polygon toPolygon(BakedQuad quad) {
         List<ClipVertex> verts = new ArrayList<>(4);
 
@@ -84,7 +68,7 @@ public class BakedQuadAdapter {
         return new Polygon(verts, normal);
     }
 
-    public List<BakedQuad> fromPrimitive(Polygon polygon, BakedQuad primitive) {
+    public List<BakedQuad> fromQuads(Polygon polygon, BakedQuad primitive) {
         List<BakedQuad> result = new ArrayList<>();
         if (polygon.getVertices().size() < 3) {
             return result;
@@ -139,6 +123,22 @@ public class BakedQuadAdapter {
             ));
         }
         return result;
+    }
+
+    private static BakedQuad findBestQuad(List<BakedQuad> quads, Plane plane) {
+        Facing target = BlockDirectionUtil.fromNormal(plane.normal.scale(-1));
+        if (target == null) {
+            return null;
+        }
+
+        for (BakedQuad quad : quads) {
+            Facing face = Facing.from(quad.getFace());
+            if (face == target) {
+                return quad;
+            }
+        }
+
+        return quads.isEmpty() ? null : quads.get(0);
     }
 
     private static void writePosition(int[] data, int index, ClipVertex v, VertexFormat format) {

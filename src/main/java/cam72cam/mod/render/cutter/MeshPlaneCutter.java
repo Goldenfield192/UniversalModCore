@@ -17,18 +17,18 @@ public final class MeshPlaneCutter {
      * Main cutting entry.
      * Returns fragments and caps.
      */
-    public static List<BakedQuad> cut(List<BakedQuad> primitives, Plane plane, BakedQuadAdapter adapter) {
+    public static List<BakedQuad> cut(List<BakedQuad> quads, Plane plane, BakedQuadAdapter adapter) {
         List<BakedQuad> result = new ArrayList<>();
         List<Pair<ClipVertex, ClipVertex>> allPairs = new ArrayList<>();
 
-        for (BakedQuad primitive : primitives) {
-            Polygon polygon = adapter.toPolygon(primitive);
+        for (BakedQuad quad : quads) {
+            Polygon polygon = adapter.toPolygon(quad);
             ClipResult clipped = Polygon.clip(polygon, plane);
 
             allPairs.addAll(clipped.intersections);
 
             if (clipped.polygon.getVertices().size() >= 3) {
-                result.addAll(adapter.fromPrimitive(clipped.polygon, primitive));
+                result.addAll(adapter.fromQuads(clipped.polygon, quad));
             }
         }
 
@@ -40,7 +40,7 @@ public final class MeshPlaneCutter {
             }
         }
 
-        QuadTemplate template = adapter.createTemplate(primitives, plane);
+        QuadTemplate template = adapter.createTemplate(quads, plane);
         if (template == null) return result;
 
         for (List<ClipVertex> ring : rings) {
