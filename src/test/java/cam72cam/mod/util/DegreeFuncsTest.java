@@ -1,9 +1,14 @@
 package cam72cam.mod.util;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class DegreeFuncsTest extends TestCase {
+@ExtendWith(MockitoExtension.class)
+public class DegreeFuncsTest {
 
+    @Test
     public void testNormalize() {
         float[] cases = new float[]{
                 0, 0,
@@ -17,10 +22,11 @@ public class DegreeFuncsTest extends TestCase {
                 -360 * 10 -30, 330,
         };
         for (int i = 0; i < cases.length; i+=2) {
-            assertEquals(cases[i+1], DegreeFuncs.normalize(cases[i]));
+            Assertions.assertEquals(cases[i+1], DegreeFuncs.normalize(cases[i]));
         }
     }
 
+    @Test
     public void testDelta() {
         float[] cases = new float[]{
                 0, 0, 0,
@@ -39,7 +45,7 @@ public class DegreeFuncsTest extends TestCase {
                 -90, 90, 180,
         };
         for (int i = 0; i < cases.length; i+=3) {
-            assertEquals(cases[i+2], DegreeFuncs.delta(cases[i], cases[i+1]));
+            Assertions.assertEquals(cases[i+2], DegreeFuncs.delta(cases[i], cases[i+1]));
         }
     }
 }

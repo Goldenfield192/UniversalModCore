@@ -2,9 +2,11 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -12,9 +14,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+@ExtendWith(MockitoExtension.class)
 public class OBJModelTest {
-    @BeforeClass
-    public static void setup() throws Exception {
+    @BeforeEach
+    public void setup() throws Exception {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
     }
 
@@ -68,9 +71,9 @@ public class OBJModelTest {
         int vertOff = 0;
         int floatStride = 9;
         for (int i = 1; i <= 30; i++) {
-            Assert.assertEquals(data[vertOff], i/1f, 0.0001);
-            Assert.assertEquals(data[vertOff+1], i/2f, 0.0001);
-            Assert.assertEquals(data[vertOff+2], i/3f, 0.0001);
+            Assertions.assertEquals(data[vertOff], i/1f, 0.0001);
+            Assertions.assertEquals(data[vertOff+1], i/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff+2], i/3f, 0.0001);
             vertOff += floatStride;
         }
     }
@@ -103,12 +106,12 @@ public class OBJModelTest {
         int normalOff = 9;
         int floatStride = 12;
         for (int i = 1; i <= 30; i++) {
-            Assert.assertEquals(data[vertOff], i*100/1f, 0.0001);
-            Assert.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
-            Assert.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
-            Assert.assertEquals(data[normalOff], i/1f, 0.0001);
-            Assert.assertEquals(data[normalOff+1], i/2f, 0.0001);
-            Assert.assertEquals(data[normalOff+2], i/3f, 0.0001);
+            Assertions.assertEquals(data[vertOff], i*100/1f, 0.0001);
+            Assertions.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
+            Assertions.assertEquals(data[normalOff], i/1f, 0.0001);
+            Assertions.assertEquals(data[normalOff+1], i/2f, 0.0001);
+            Assertions.assertEquals(data[normalOff+2], i/3f, 0.0001);
             vertOff += floatStride;
             normalOff += floatStride;
         }
@@ -150,14 +153,14 @@ public class OBJModelTest {
         int normalOff = 9;
         int floatStride = 12;
         for (int i = 1; i <= 30; i++) {
-            Assert.assertEquals(data[vertOff], i*100/1f, 0.0001);
-            Assert.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
-            Assert.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
-            Assert.assertEquals(data[normalOff], i/1f, 0.0001);
-            Assert.assertEquals(data[normalOff+1], i/2f, 0.0001);
-            Assert.assertEquals(data[normalOff+2], i/3f, 0.0001);
-            Assert.assertEquals(data[texOffset], -i/1f, 0.0001);
-            Assert.assertEquals(data[texOffset+1], -i/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff], i*100/1f, 0.0001);
+            Assertions.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
+            Assertions.assertEquals(data[normalOff], i/1f, 0.0001);
+            Assertions.assertEquals(data[normalOff+1], i/2f, 0.0001);
+            Assertions.assertEquals(data[normalOff+2], i/3f, 0.0001);
+            Assertions.assertEquals(data[texOffset], -i/1f, 0.0001);
+            Assertions.assertEquals(data[texOffset+1], -i/2f, 0.0001);
             vertOff += floatStride;
             normalOff += floatStride;
             texOffset += floatStride;
