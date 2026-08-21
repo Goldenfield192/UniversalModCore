@@ -9,10 +9,19 @@ import java.util.List;
 
 public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
+    private Mode mode;
+
+    public DirectDraw() {
+        this(Mode.QUADS);
+    }
+
+    public DirectDraw(Mode mode) {
+        this.mode = mode;
+    }
 
     public void draw(RenderState state) {
         try (With ctx = RenderContext.apply(state)) {
-            GL11.glBegin(GL11.GL_QUADS);
+            GL11.glBegin(mode.asGlMode());
             for (VertexBuilder vert : verts) {
                 vert.draw();
             }
@@ -82,6 +91,26 @@ public class DirectDraw {
                 GL11.glNormal3d(j, k, l);
             }
             GL11.glVertex3d(x, y, z);
+        }
+    }
+
+    public enum Mode {
+        LINES(GL11.GL_LINES),
+        LINE_STRIP(GL11.GL_LINE_STRIP),
+        TRIANGLES(GL11.GL_TRIANGLES),
+        TRIANGLE_STRIP(GL11.GL_TRIANGLE_STRIP),
+        TRIANGLE_FAN(GL11.GL_TRIANGLE_FAN),
+        QUADS(GL11.GL_QUADS),
+        ;
+
+        private final int glMode;
+
+        Mode(int glMode) {
+            this.glMode = glMode;
+        }
+
+        int asGlMode() {
+            return glMode;
         }
     }
 }
