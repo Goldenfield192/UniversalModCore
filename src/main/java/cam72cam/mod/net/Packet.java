@@ -34,7 +34,7 @@ public abstract class Packet {
     private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
 
     // Packet id -> Packet Constructor
-    private static final Map<String, Supplier<? extends Packet>> packetFactories = new HashMap<>();
+    private static final Map<String, PacketDefinition> factories = new HashMap<>();
 
     static {
         // Client to server
@@ -52,7 +52,7 @@ public abstract class Packet {
 
     /**
      * So either forge or minecraft has a bug where it mixes up the player in the context handler...
-     *
+     * <p>
      * We now track player and world ourselves
      */
     @TagField("umcPlayer")
@@ -70,15 +70,14 @@ public abstract class Packet {
     }
 
     /** How to register a packet (do in CONSTRUCT phase) */
-    public static void register(Supplier<? extends Packet> sup, PacketDirection dir,
-                                                   PacketProtocol protocol) {
+    public static void register(Supplier<? extends Packet> sup, PacketDirection dir, PacketProtocol protocol) {
         Packet packet = sup.get();
-        if (packetFactories.containsKey(packet.id)) {
+        if (factories.containsKey(packet.id)) {
             //Already registered, goodbye
             return;
         }
-        packetFactories.put(packet.id, sup);
-        // Packet Directions and Protocols are ignored in 1.12.2.
+        factories.put(packet.id, new PacketDefinition(packet.id, sup, dir, protocol));
+        // Packet Protocols are not handled in this version.
     }
 
     /** Called after deserialization */
@@ -102,12 +101,18 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
+        if(!factories.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
         net.sendToAllAround(new Message(this),
                 new NetworkRegistry.TargetPoint(world.getId(), pos.x, pos.y, pos.z, distance));
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
+        if(!factories.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
         net.minecraft.entity.Entity internal = entity.internal;
         int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
@@ -115,6 +120,9 @@ public abstract class Packet {
 
     /** Send from client to server */
     public void sendToServer() {
+        if(!factories.get(this.id).direction.canSendToServer()) {
+            throw new IllegalStateException(String.format("Can't send S2C only packet %s to client side!", this.id));
+        }
         this.player = MinecraftClient.getPlayer();
         this.world = MinecraftClient.getPlayer().getWorld();
         net.sendToServer(new Message(this));
@@ -122,13 +130,33 @@ public abstract class Packet {
 
     /** Broadcast to all players from server */
     public void sendToAll() {
+        if(!factories.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
         net.sendToAll(new Message(this));
     }
 
 	/** Send from server to player */
 	public void sendToPlayer(Player player) {
+        if(!factories.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
 		net.sendTo(new Message(this), (EntityPlayerMP) player.internal);
 	}
+
+    private static class PacketDefinition {
+        String id;
+        Supplier<? extends Packet> supplier;
+        PacketDirection direction;
+        PacketProtocol protocol;
+
+        public PacketDefinition(String id, Supplier<? extends Packet> supplier, PacketDirection direction, PacketProtocol protocol) {
+            this.id = id;
+            this.supplier = supplier;
+            this.direction = direction;
+            this.protocol = protocol;
+        }
+    }
 
     /** Forge message construct.  Do not use directly */
     public static class Message implements IMessage {
@@ -146,7 +174,7 @@ public abstract class Packet {
         public void fromBytes(ByteBuf buf) {
             TagCompound data = new TagCompound(ByteBufUtils.readTag(buf));
             String id = data.getString("cam72cam.mod.pktid");
-            packet = packetFactories.get(id).get();
+            packet = factories.get(id).supplier.get();
             packet.data = data;
         }
 
