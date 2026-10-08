@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.ModEvent;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
@@ -34,7 +35,7 @@ public abstract class Packet {
     private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
 
     // Packet id -> Packet Constructor
-    private static final Map<String, PacketDefinition> factories = new HashMap<>();
+    private static final Map<String, PacketDefinition> definitions = new HashMap<>();
 
     static {
         // Client to server
@@ -61,22 +62,14 @@ public abstract class Packet {
     @TagField("umcWorld")
     private World world;
 
-    /**
-     * How to register a packet (do in CONSTRUCT phase)
-     * Overload that assumes the packet protocol is {@see PacketProtocol.PLAY}
-     * */
+    /** Entrypoint of registering a packet (Do in {@link ModEvent#CONSTRUCT} phase) */
     public static void register(Supplier<? extends Packet> sup, PacketDirection dir) {
-        register(sup, dir, PacketProtocol.PLAY);
-    }
-
-    /** How to register a packet (do in CONSTRUCT phase) */
-    public static void register(Supplier<? extends Packet> sup, PacketDirection dir, PacketProtocol protocol) {
         Packet packet = sup.get();
-        if (factories.containsKey(packet.id)) {
+        if (definitions.containsKey(packet.id)) {
             //Already registered, goodbye
             return;
         }
-        factories.put(packet.id, new PacketDefinition(packet.id, sup, dir, protocol));
+        definitions.put(packet.id, new PacketDefinition(packet.id, sup, dir));
         // Packet Protocols are not handled in this version.
     }
 
@@ -101,7 +94,7 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        if(!factories.get(this.id).direction.canSendToClient()) {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
             throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
         }
         net.sendToAllAround(new Message(this),
@@ -110,7 +103,7 @@ public abstract class Packet {
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
-        if(!factories.get(this.id).direction.canSendToClient()) {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
             throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
         }
         net.minecraft.entity.Entity internal = entity.internal;
@@ -120,7 +113,7 @@ public abstract class Packet {
 
     /** Send from client to server */
     public void sendToServer() {
-        if(!factories.get(this.id).direction.canSendToServer()) {
+        if(!definitions.get(this.id).direction.canSendToServer()) {
             throw new IllegalStateException(String.format("Can't send S2C only packet %s to client side!", this.id));
         }
         this.player = MinecraftClient.getPlayer();
@@ -130,7 +123,7 @@ public abstract class Packet {
 
     /** Broadcast to all players from server */
     public void sendToAll() {
-        if(!factories.get(this.id).direction.canSendToClient()) {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
             throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
         }
         net.sendToAll(new Message(this));
@@ -138,23 +131,21 @@ public abstract class Packet {
 
 	/** Send from server to player */
 	public void sendToPlayer(Player player) {
-        if(!factories.get(this.id).direction.canSendToClient()) {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
             throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
         }
 		net.sendTo(new Message(this), (EntityPlayerMP) player.internal);
 	}
 
     private static class PacketDefinition {
-        String id;
-        Supplier<? extends Packet> supplier;
-        PacketDirection direction;
-        PacketProtocol protocol;
+        final String id;
+        final Supplier<? extends Packet> supplier;
+        final PacketDirection direction;
 
-        public PacketDefinition(String id, Supplier<? extends Packet> supplier, PacketDirection direction, PacketProtocol protocol) {
+        public PacketDefinition(String id, Supplier<? extends Packet> supplier, PacketDirection direction) {
             this.id = id;
             this.supplier = supplier;
             this.direction = direction;
-            this.protocol = protocol;
         }
     }
 
@@ -174,7 +165,7 @@ public abstract class Packet {
         public void fromBytes(ByteBuf buf) {
             TagCompound data = new TagCompound(ByteBufUtils.readTag(buf));
             String id = data.getString("cam72cam.mod.pktid");
-            packet = factories.get(id).supplier.get();
+            packet = definitions.get(id).supplier.get();
             packet.data = data;
         }
 
@@ -210,7 +201,8 @@ public abstract class Packet {
             }
             if (message.packet.getPlayer() == null) {
                 try {
-                    throw new Exception(String.format("Invalid Packet %s: missing player", message.packet.id));
+                    throw new Exception(String.format("Packet %s is missing player. If the server is in offline mode, please consider installing an offline UUID fix mod.",
+                                                      message.packet.id));
                 } catch (Exception e) {
                     ModCore.catching(e);
                     return;
