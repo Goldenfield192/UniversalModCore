@@ -35,7 +35,6 @@ public abstract class Packet {
     private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
 
     // Packet id -> Packet Constructor
-
     private static final Map<String, PacketDefinition> definitions = new HashMap<>();
 
     static {
@@ -115,7 +114,7 @@ public abstract class Packet {
     /** Send from client to server */
     public void sendToServer() {
         if(!definitions.get(this.id).direction.canSendToServer()) {
-            throw new IllegalStateException(String.format("Can't send S2C only packet %s to client side!", this.id));
+            throw new IllegalStateException(String.format("Can't send S2C only packet %s to server side!", this.id));
         }
         this.player = MinecraftClient.getPlayer();
         this.world = MinecraftClient.getPlayer().getWorld();
