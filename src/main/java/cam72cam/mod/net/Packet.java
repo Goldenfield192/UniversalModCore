@@ -70,7 +70,6 @@ public abstract class Packet {
             return;
         }
         definitions.put(packet.id, new PacketDefinition(packet.id, sup, dir));
-        // Packet Protocols are not handled in this version.
     }
 
     /** Called after deserialization */
