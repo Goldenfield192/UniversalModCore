@@ -35,6 +35,7 @@ public abstract class Packet {
     private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
 
     // Packet id -> Packet Constructor
+
     private static final Map<String, PacketDefinition> definitions = new HashMap<>();
 
     static {
@@ -201,8 +202,8 @@ public abstract class Packet {
             }
             if (message.packet.getPlayer() == null) {
                 try {
-                    throw new Exception(String.format("Packet %s is missing player. If the server is in offline mode, please consider installing an offline UUID fix mod.",
-                                                      message.packet.id));
+                    throw new RuntimeException(String.format("Packet %s is missing player. If the server is in offline mode, please consider installing an offline UUID fix mod.",
+                                                             message.packet.id));
                 } catch (Exception e) {
                     ModCore.catching(e);
                     return;
