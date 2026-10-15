@@ -4,16 +4,15 @@ import cam72cam.mod.math.Vec3d;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
  * A {@link VertexBuffer} API wrapper, making accessing geometry completely separated from backend.
+ * @deprecated Use common.util.FaceAccessor for new Model framework, this is kept for compatibility.
  */
+
 public class FaceAccessor implements Iterable<FaceAccessor> {
-    // Cache VBOs to avoid costly re-fetching, even if they are removed it won't cause too much waste(1-2 MB)
-    private static final ConcurrentHashMap<String, VertexBuffer> vbos = new ConcurrentHashMap<>();
     private final OBJModel model;
 
     /**
@@ -37,12 +36,12 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
     }
 
     protected FaceAccessor(OBJModel model, int startFace, int endFace) {
-        this(model, startFace, endFace, true);
+        this(model, startFace, endFace, true, null);
     }
 
-    protected FaceAccessor(OBJModel model, int startFace, int endFace, boolean canSplit) {
+    protected FaceAccessor(OBJModel model, int startFace, int endFace, boolean canSplit, VertexBuffer buffer) {
         this.model = model;
-        this.vbo = vbos.computeIfAbsent(model.hash, i -> model.vbo.buffer.get());
+        this.vbo = buffer == null ? model.vbo.buffer.get() : buffer;
         int faceCount = this.vbo.data.length / this.vbo.stride / this.vbo.vertsPerFace;
         v0 = new VertexAccessor(0);
         v1 = new VertexAccessor(1);
@@ -66,7 +65,8 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
             return null;
         }
         OBJGroup group = model.groups.get(groupName);
-        return new FaceAccessor(model, group.faceStart, group.faceStop + 1, false);
+        // Pass buffer instead of caching it
+        return new FaceAccessor(model, group.faceStart, group.faceStop + 1, false, vbo);
     }
 
     /**
@@ -74,21 +74,12 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
      * @return OBJFace of current face
      */
     public OBJFace asOBJFace() {
-        OBJFace face = new OBJFace();
-
-        face.vertex0 = new OBJFace.Vertex(v0);
-        face.vertex1 = new OBJFace.Vertex(v1);
-        face.vertex2 = new OBJFace.Vertex(v2);
-
-        if (vbo.hasNormals) {
-            face.normal = v0.normAsVec3d();
-        } else {
-            Vec3d v0 = face.vertex0.pos;
-            Vec3d v1 = face.vertex1.pos;
-            Vec3d v2 = face.vertex2.pos;
-            face.normal = v1.subtract(v0).crossProduct(v2.subtract(v0)).normalize();
-        }
-        return face;
+        OBJFace.Vertex vert0 = new OBJFace.Vertex(v0);
+        OBJFace.Vertex vert1 = new OBJFace.Vertex(v1);
+        OBJFace.Vertex vert2 = new OBJFace.Vertex(v2);
+        return new OBJFace(vert0, vert1, vert2,
+                           vbo.hasNormals ? v0.normAsVec3d()
+                           : vert1.pos.subtract(vert0.pos).crossProduct(vert2.pos.subtract(vert0.pos)).normalize());
     }
 
     /**

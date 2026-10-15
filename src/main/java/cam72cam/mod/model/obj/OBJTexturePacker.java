@@ -2,6 +2,7 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.model.common.util.ImageUtils;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,7 +19,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static cam72cam.mod.model.obj.ImageUtils.scaleImage;
+import static cam72cam.mod.model.common.util.ImageUtils.scaleImage;
 
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class OBJTexturePacker {
